@@ -1,0 +1,32 @@
+{
+  "name": "@omsimos/react-highlight-popover",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts"
+  },
+  "keywords": [
+    "react",
+    "highlight",
+    "text selection",
+    "popover"
+  ],
+  "author": "Josh Daniel Bañares",
+  "license": "MIT",
+  "description": "A React utility for showing a popover when highlighting text within a container.",
+  "peerDependencies": {
+    "react": "^17.0.0 || ^18.0.0",
+    "react-dom": "^17.0.0 || ^18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "tsup": "^8.2.4",
+    "typescript": "^5.5.4"
+  }
+}
