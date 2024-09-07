@@ -1,8 +1,7 @@
-import React from "react";
 import { render, fireEvent } from "@testing-library/react";
 import { expect, test, describe, beforeEach, mock } from "bun:test";
 
-import { HighlightPopover } from "../src/HighlightPopover";
+import { HighlightPopover } from "@omsimos/react-highlight-popover";
 
 mock.module("../src/HighlightPopover", () => {
   const originalModule = require("../src/HighlightPopover");

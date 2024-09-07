@@ -1,131 +1,81 @@
-# @omsimos/react-highlight-popover
+# Turborepo starter
 
-A customizable, headless React component for creating popovers on text selection, with zero dependencies.
+This is an official starter Turborepo.
 
-## Features
+## Using this example
 
-- 🎯 Easy-to-use React component with zero dependencies
-- 🧠 Headless component for maximum flexibility
-- 🎨 Fully customizable popover content and styling
-- 📏 Configurable minimum selection length
-- 🖱️ Automatic positioning based on text selection
-- 🎛️ Customizable offset for fine-tuning popover position
-- 🔄 Event callbacks for selection and popover lifecycle
-- 🔌 Extensible architecture for advanced use cases
-
-## Installation
-
-Install the package using npm:
+Run the following command:
 
 ```sh
-npm install @omsimos/react-highlight-popover
+npx create-turbo@latest
 ```
 
-Or using pnpm:
+## What's inside?
 
-```sh
-pnpm add @omsimos/react-highlight-popover
+This Turborepo includes the following packages/apps:
+
+### Apps and Packages
+
+- `docs`: a [Next.js](https://nextjs.org/) app
+- `web`: another [Next.js](https://nextjs.org/) app
+- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
+- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
+- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+
+Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+
+### Utilities
+
+This Turborepo has some additional tools already setup for you:
+
+- [TypeScript](https://www.typescriptlang.org/) for static type checking
+- [ESLint](https://eslint.org/) for code linting
+- [Prettier](https://prettier.io) for code formatting
+
+### Build
+
+To build all apps and packages, run the following command:
+
+```
+cd my-turborepo
+pnpm build
 ```
 
-## Usage
+### Develop
 
-Here's a basic example of how to use the `HighlightPopover` component:
+To develop all apps and packages, run the following command:
 
-```jsx
-import { HighlightPopover } from '@omsimos/react-highlight-popover';
-
-function App() {
-  const renderPopover = ({ selection }) => (
-    <div className="bg-white border rounded p-2 shadow-lg">
-      You selected: {selection}
-    </div>
-  );
-
-  return (
-    <HighlightPopover renderPopover={renderPopover}>
-      <p>
-        This is a sample text. Try selecting some words to see the popover in action.
-      </p>
-    </HighlightPopover>
-  );
-}
-
-export default App;
+```
+cd my-turborepo
+pnpm dev
 ```
 
+### Remote Caching
 
-## API
+Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
 
-### `HighlightPopover` Props
+By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup), then enter the following commands:
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `children` | `React.ReactNode` | (required) | The content where text selection will trigger the popover |
-| `renderPopover` | `(props: { position: Position, selection: string }) => React.ReactNode` | (required) | Function to render the popover content |
-| `className` | `string` | `''` | Additional CSS class for the wrapper element |
-| `offset` | `{ x: number, y: number }` | `{ x: 0, y: 0 }` | Offset for fine-tuning popover position |
-| `minSelectionLength` | `number` | `1` | Minimum length of text selection to trigger the popover |
-| `onSelectionStart` | `() => void` | `undefined` | Callback fired when text selection starts |
-| `onSelectionEnd` | `(selection: string) => void` | `undefined` | Callback fired when text selection ends |
-| `onPopoverShow` | `() => void` | `undefined` | Callback fired when the popover is shown |
-| `onPopoverHide` | `() => void` | `undefined` | Callback fired when the popover is hidden |
-
-### `useHighlightPopover` Hook
-
-The `useHighlightPopover` hook can be used to access the internal state of the `HighlightPopover` component. It returns an object with the following properties:
-
-- `showPopover`: `boolean` - Indicates whether the popover is currently visible
-- `setShowPopover`: `(show: boolean) => void` - Function to manually control popover visibility
-- `popoverPosition`: `{ top: number, left: number }` - Current position of the popover
-- `currentSelection`: `string` - Currently selected text
-
-## Advanced Example
-
-Here's a more advanced example demonstrating custom styling and event handling:
-
-```jsx
-import { HighlightPopover, useHighlightPopover } from '@omsimos/react-highlight-popover';
-
-function CustomPopover() {
-  const { currentSelection, setShowPopover } = useHighlightPopover();
-  
-  return (
-    <div className="bg-white border rounded p-2 shadow-lg">
-      <p>You selected: {currentSelection}</p>
-      <button onClick={() => setShowPopover(false)}>Close</button>
-    </div>
-  );
-}
-
-function App() {
-  const handleSelectionStart = () => console.log('Selection started');
-  const handleSelectionEnd = (selection) => console.log('Selected:', selection);
-  const handlePopoverShow = () => console.log('Popover shown');
-  const handlePopoverHide = () => console.log('Popover hidden');
-
-  return (
-    <HighlightPopover
-      renderPopover={() => <CustomPopover />}
-      offset={{ x: 0, y: 10 }}
-      minSelectionLength={3}
-      onSelectionStart={handleSelectionStart}
-      onSelectionEnd={handleSelectionEnd}
-      onPopoverShow={handlePopoverShow}
-      onPopoverHide={handlePopoverHide}
-    >
-      <p>
-        This is a more advanced example. Try selecting at least three characters
-        to see the custom popover with a close button.
-      </p>
-    </HighlightPopover>
-  );
-}
-
-export default App;
+```
+cd my-turborepo
+npx turbo login
 ```
 
-## Contributing
-If you like this project, please consider giving it a star! ✨ If you wish to suggest or work on a new feature, please open an issue to discuss with the community and the project maintainers. We appreciate your interest and look forward to collaborating with you!
+This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
 
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+
+```
+npx turbo link
+```
+
+## Useful Links
+
+Learn more about the power of Turborepo:
+
+- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
+- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
+- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
+- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
+- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
+- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
