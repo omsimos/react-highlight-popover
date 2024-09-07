@@ -150,7 +150,11 @@ export function HighlightPopover({
 
   return (
     <HighlightPopoverContext.Provider value={contextValue}>
-      <div ref={popoverRef} className={`relative ${className}`}>
+      <div
+        ref={popoverRef}
+        style={{ position: "relative" }}
+        className={className}
+      >
         {children}
         {showPopover && (
           <div
