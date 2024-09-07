@@ -117,4 +117,37 @@ describe("HighlightPopover", () => {
     fireEvent.mouseDown(document.body);
     expect(onPopoverHide).toHaveBeenCalled();
   });
+
+  test("respects minSelectionLength prop", () => {
+    const { container, queryByTestId } = render(
+      <HighlightPopover
+        renderPopover={mockRenderPopover}
+        minSelectionLength={5}
+      >
+        <p>Test content</p>
+      </HighlightPopover>,
+    );
+
+    const textNode = container.firstChild?.firstChild?.firstChild as Text;
+    const range = document.createRange();
+    range.setStart(textNode, 0);
+    range.setEnd(textNode, 4);
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    fireEvent(document, new Event("selectionchange"));
+
+    expect(queryByTestId("mock-popover")).toBeNull();
+
+    range.setEnd(textNode, 7);
+
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    fireEvent(document, new Event("selectionchange"));
+
+    expect(queryByTestId("mock-popover")).toBeDefined();
+  });
 });
