@@ -125,7 +125,7 @@ export default App;
 ```
 
 ## Contributing
-If you like this project, please consider giving it a star! ✨ If you wish to suggest or work on a new feature, please open an issue to discuss with the community and the project maintainers. We appreciate your interest and look forward to collaborating with you!
+Contributions are welcome! Please feel free to submit a Pull Request. If you like this project, please consider giving it a star! ✨ 
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the [MIT License](LICENSE)
