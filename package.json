@@ -5,18 +5,25 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts"
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "test": "bun test"
   },
   "keywords": [
     "react",
     "highlight",
     "text selection",
-    "popover"
+    "highlight popover"
   ],
-  "author": "Josh Daniel Bañares",
+  "author": {
+    "name": "Josh Daniel Bañares",
+    "email": "joshxfi.dev@gmail.com",
+    "url": "https://josh.omsimos.com"
+  },
   "license": "MIT",
   "description": "A customizable, headless React component for creating popovers on text selection, with zero dependencies.",
   "peerDependencies": {
@@ -33,5 +40,6 @@
     "tsup": "^8.2.4",
     "typescript": "^5.5.4"
   },
-  "type": "module"
+  "type": "module",
+  "sideEffects": false
 }
