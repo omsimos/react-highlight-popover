@@ -13,7 +13,7 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Bundle library
+      - name: Build projects
         run: bun run build
 
       - name: Run tests
