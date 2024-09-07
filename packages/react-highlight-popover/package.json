@@ -1,0 +1,48 @@
+{
+  "name": "@omsimos/react-highlight-popover",
+  "version": "1.0.0",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch"
+  },
+  "keywords": [
+    "react",
+    "highlight",
+    "text selection",
+    "highlight popover"
+  ],
+  "author": {
+    "name": "Josh Daniel Bañares",
+    "email": "joshxfi.dev@gmail.com",
+    "url": "https://josh.omsimos.com"
+  },
+  "license": "MIT",
+  "description": "A customizable, headless React component for creating popovers on text selection, with zero dependencies.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/omsimos/react-highlight-popover.git"
+  },
+  "bugs": {
+    "url": "https://github.com/omsimos/react-highlight-popover/issues"
+  },
+  "homepage": "https://github.com/omsimos/react-highlight-popover",
+  "peerDependencies": {
+    "react": "^17.0.0 || ^18.0.0",
+    "react-dom": "^17.0.0 || ^18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18",
+    "@types/react-dom": "^18"
+  },
+  "type": "module",
+  "sideEffects": false
+}
