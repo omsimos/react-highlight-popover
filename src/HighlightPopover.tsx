@@ -154,8 +154,10 @@ export function HighlightPopover({
         {children}
         {showPopover && (
           <div
-            className="absolute z-40 mt-1 transform -translate-x-1/2"
             style={{
+              zIndex: 40,
+              position: "absolute",
+              transform: "translateX(-50%)",
               top: `${popoverPosition.top}px`,
               left: `${popoverPosition.left}px`,
             }}
