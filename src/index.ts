@@ -1,1 +1,1 @@
-export { useHighlightPopover } from './useHighlightPopover';
+export * from "./HighlightPopover";
