@@ -24,9 +24,13 @@
     "react-dom": "^17.0.0 || ^18.0.0"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.0.1",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "tsup": "^8.2.4",
-    "typescript": "^5.5.4"
-  }
+    "typescript": "^5.5.4",
+    "@types/bun": "latest"
+  },
+  "type": "module"
 }
