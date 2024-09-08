@@ -19,7 +19,7 @@ interface HighlightPopoverProps {
     selection: string;
   }) => React.ReactNode;
   className?: string;
-  offset?: { x: number; y: number };
+  offset?: { x?: number; y?: number };
   minSelectionLength?: number;
   onSelectionStart?: () => void;
   onSelectionEnd?: (selection: string) => void;
@@ -64,16 +64,16 @@ export function HighlightPopover({
     left: 0,
   });
   const [currentSelection, setCurrentSelection] = useState("");
-  const popoverRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const isSelectionWithinContainer = useCallback((selection: Selection) => {
-    if (!popoverRef.current) return false;
+    if (!containerRef.current) return false;
     const range = selection.getRangeAt(0);
-    return popoverRef.current.contains(range.commonAncestorContainer);
+    return containerRef.current.contains(range.commonAncestorContainer);
   }, []);
 
   const handleSelection = useCallback(() => {
-    if (!popoverRef.current) return;
+    if (!containerRef.current) return;
 
     const selection = window.getSelection();
     if (
@@ -84,19 +84,14 @@ export function HighlightPopover({
       onSelectionStart?.();
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
-      const containerRect = popoverRef.current.getBoundingClientRect();
+      const containerRect = containerRef.current.getBoundingClientRect();
 
-      const top = Math.min(
-        rect.bottom - containerRect.top + offset.y,
-        containerRect.height,
-      );
-      const left = Math.max(
-        0,
-        Math.min(
-          rect.left - containerRect.left + rect.width / 2 + offset.x,
-          containerRect.width,
-        ),
-      );
+      const top = rect.bottom - containerRect.top - (offset && (offset.y ?? 0));
+      const left =
+        rect.left -
+        containerRect.left +
+        rect.width / 2 +
+        (offset && (offset.x ?? 0));
 
       setPopoverPosition({ top, left });
       setCurrentSelection(selection.toString());
@@ -127,8 +122,8 @@ export function HighlightPopover({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        popoverRef.current &&
-        !popoverRef.current.contains(event.target as Node)
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
       ) {
         setShowPopover(false);
         onPopoverHide?.();
@@ -151,7 +146,7 @@ export function HighlightPopover({
   return (
     <HighlightPopoverContext.Provider value={contextValue}>
       <div
-        ref={popoverRef}
+        ref={containerRef}
         style={{ position: "relative" }}
         className={className}
       >
