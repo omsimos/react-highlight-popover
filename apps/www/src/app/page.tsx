@@ -8,7 +8,7 @@ export default function Home() {
         <Demo />
       </div>
 
-      <div className="text-zinc-800 rounded-lg shadow-md border px-4 py-3 mt-24">
+      <div className="text-zinc-800 bg-zinc-50/50 font-medium rounded-lg shadow-sm border px-4 py-3 mt-24">
         <p>
           npm install{" "}
           <span className="font-semibold">
