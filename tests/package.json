@@ -13,8 +13,7 @@
     "@happy-dom/global-registrator": "^15.7.3",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.0.1",
-    "@types/bun": "latest",
-    "tsup": "^8.2.4"
+    "@types/bun": "latest"
   },
   "type": "module"
 }
