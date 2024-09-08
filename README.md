@@ -9,7 +9,7 @@ A customizable, headless React component for creating popovers on text selection
 - 🎨 Fully customizable popover content and styling
 - 📏 Configurable minimum selection length
 - 🖱️ Automatic positioning based on text selection
-- 🎛️ Customizable offset for fine-tuning popover position
+- 🎛️ Customizable offset for adjusting popover position
 - 🔄 Event callbacks for selection and popover lifecycle
 - 🔌 Extensible architecture for advanced use cases
 
@@ -36,7 +36,7 @@ import { HighlightPopover } from '@omsimos/react-highlight-popover';
 
 function App() {
   const renderPopover = ({ selection }) => (
-    <div className="bg-white border rounded p-2 shadow-lg">
+    <div className="bg-white border rounded p-2 shadow-lg select-none">
       You selected: {selection}
     </div>
   );
@@ -63,7 +63,7 @@ export default App;
 | `children` | `React.ReactNode` | (required) | The content where text selection will trigger the popover |
 | `renderPopover` | `(props: { position: Position, selection: string }) => React.ReactNode` | (required) | Function to render the popover content |
 | `className` | `string` | `''` | Additional CSS class for the wrapper element |
-| `offset` | `{ x: number, y: number }` | `{ x: 0, y: 0 }` | Offset for fine-tuning popover position |
+| `offset` | `{ x?: number, y?: number }` | `{ x: 0, y: 0 }` | Offset for adjusting popover position |
 | `minSelectionLength` | `number` | `1` | Minimum length of text selection to trigger the popover |
 | `onSelectionStart` | `() => void` | `undefined` | Callback fired when text selection starts |
 | `onSelectionEnd` | `(selection: string) => void` | `undefined` | Callback fired when text selection ends |
@@ -90,9 +90,9 @@ function CustomPopover() {
   const { currentSelection, setShowPopover } = useHighlightPopover();
   
   return (
-    <div className="bg-white border rounded p-2 shadow-lg">
+    <div className="bg-white border rounded-md p-2 shadow-lg select-none">
       <p>You selected: {currentSelection}</p>
-      <button onClick={() => setShowPopover(false)}>Close</button>
+      <button className="font-semibold" onClick={() => setShowPopover(false)}>Close</button>
     </div>
   );
 }
@@ -106,15 +106,15 @@ function App() {
   return (
     <HighlightPopover
       renderPopover={() => <CustomPopover />}
-      offset={{ x: 0, y: 10 }}
-      minSelectionLength={3}
+      offset={{ x: 0, y: -10 }}
+      minSelectionLength={5}
       onSelectionStart={handleSelectionStart}
       onSelectionEnd={handleSelectionEnd}
       onPopoverShow={handlePopoverShow}
       onPopoverHide={handlePopoverHide}
     >
       <p>
-        This is a more advanced example. Try selecting at least three characters
+        This is a more advanced example. Try selecting at least five characters
         to see the custom popover with a close button.
       </p>
     </HighlightPopover>
@@ -125,7 +125,7 @@ export default App;
 ```
 
 ## Contributing
-Contributions are welcome! Please feel free to submit a Pull Request. If you like this project, please consider giving it a star! ✨ 
+Contributions are welcome! Please feel free to submit a pull request, we appreciate your interest and look forward to collaborating with you. If you like this project, please consider giving it a star! ✨ 
 
 ## License
 This project is licensed under the [MIT License](LICENSE)
