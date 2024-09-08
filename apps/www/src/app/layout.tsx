@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -7,6 +7,12 @@ const geistSans = localFont({
   variable: "--font-geist-sans",
   weight: "100 900",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  themeColor: "#ffffff",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: "React Highlight Popover",
@@ -35,9 +41,18 @@ export const metadata: Metadata = {
     description:
       "Create customizable popovers on text selection with this zero-dependency React component.",
   },
-  viewport: "width=device-width, initial-scale=1",
-  robots: "index, follow",
-  themeColor: "#ffffff",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      noimageindex: false,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   alternates: {
     canonical: "https://react-highlight-popover.omsimos.com",
   },
