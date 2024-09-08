@@ -21,5 +21,8 @@
     "apps/*",
     "packages/*",
     "tests"
-  ]
+  ],
+  "dependencies": {
+    "@changesets/cli": "^2.27.8"
+  }
 }
