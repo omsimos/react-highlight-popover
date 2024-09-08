@@ -2,6 +2,8 @@
 
 A customizable, headless React component for creating popovers on text selection, with zero dependencies.
 
+![image](https://github.com/user-attachments/assets/83db38a0-be61-4ad8-a8c8-e31c1f2e4312)
+
 ## Features
 
 - 🎯 Easy-to-use React component with zero dependencies
