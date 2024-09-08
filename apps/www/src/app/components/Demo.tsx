@@ -13,7 +13,7 @@ function Popover() {
 export function Demo() {
   return (
     <HighlightPopover renderPopover={() => <Popover />}>
-      <h4 className="font-medium mt-3 text-lg">
+      <h4 className="mt-3 text-lg">
         A headless component for displaying popovers on text selection.
       </h4>
     </HighlightPopover>
