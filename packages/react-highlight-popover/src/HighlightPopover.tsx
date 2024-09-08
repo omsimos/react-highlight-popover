@@ -68,8 +68,16 @@ export function HighlightPopover({
 
   const isSelectionWithinContainer = useCallback((selection: Selection) => {
     if (!containerRef.current) return false;
-    const range = selection.getRangeAt(0);
-    return containerRef.current.contains(range.commonAncestorContainer);
+    for (let i = 0; i < selection.rangeCount; i++) {
+      const range = selection.getRangeAt(i);
+      if (
+        !containerRef.current.contains(range.startContainer) ||
+        !containerRef.current.contains(range.endContainer)
+      ) {
+        return false;
+      }
+    }
+    return true;
   }, []);
 
   const handleSelection = useCallback(() => {
