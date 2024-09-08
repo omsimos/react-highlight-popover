@@ -155,6 +155,7 @@ export function HighlightPopover({
           <div
             style={{
               zIndex: 40,
+              width: "max-content",
               position: "absolute",
               transform: "translateX(-50%)",
               top: `${popoverPosition.top}px`,
