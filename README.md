@@ -9,6 +9,7 @@ A customizable, headless React component for creating popovers on text selection
 - 🎯 Easy-to-use React component with zero dependencies
 - 🧠 Headless component for maximum flexibility
 - 🎨 Fully customizable popover content and styling
+- 🎭 Smooth rendering with minimal re-renders
 - 📏 Configurable minimum selection length
 - 🖱️ Automatic positioning based on text selection
 - 🎛️ Customizable offset for adjusting popover position
@@ -66,6 +67,7 @@ export default App;
 | `renderPopover` | `(props: { position: Position, selection: string }) => React.ReactNode` | (required) | Function to render the popover content |
 | `className` | `string` | `''` | Additional CSS class for the wrapper element |
 | `offset` | `{ x?: number, y?: number }` | `{ x: 0, y: 0 }` | Offset for adjusting popover position |
+| `zIndex` | `number` | `40` | The z-index of the popover |
 | `minSelectionLength` | `number` | `1` | Minimum length of text selection to trigger the popover |
 | `onSelectionStart` | `() => void` | `undefined` | Callback fired when text selection starts |
 | `onSelectionEnd` | `(selection: string) => void` | `undefined` | Callback fired when text selection ends |
@@ -80,6 +82,7 @@ The `useHighlightPopover` hook can be used to access the internal state of the `
 - `setShowPopover`: `(show: boolean) => void` - Function to manually control popover visibility
 - `popoverPosition`: `{ top: number, left: number }` - Current position of the popover
 - `currentSelection`: `string` - Currently selected text
+- `setCurrentSelection`: `(selection: string) => void` - Function to manually update the current selection
 
 ## Advanced Example
 

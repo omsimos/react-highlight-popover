@@ -33,6 +33,8 @@ interface HighlightPopoverProps {
   className?: string;
   /** Offset for adjusting popover position. */
   offset?: { x?: number; y?: number };
+  /** The z-index of the popover. */
+  zIndex?: number;
   /** Minimum length of text selection to trigger the popover. */
   minSelectionLength?: number;
   /** Callback fired when text selection starts. */
@@ -43,8 +45,6 @@ interface HighlightPopoverProps {
   onPopoverShow?: () => void;
   /** Callback fired when the popover is hidden. */
   onPopoverHide?: () => void;
-  /** The z-index of the popover. */
-  zIndex?: number;
 }
 
 /**
@@ -92,12 +92,12 @@ export function HighlightPopover({
   renderPopover,
   className = "",
   offset = { x: 0, y: 0 },
+  zIndex = 40,
   minSelectionLength = 1,
   onSelectionStart,
   onSelectionEnd,
   onPopoverShow,
   onPopoverHide,
-  zIndex = 40,
 }: HighlightPopoverProps) {
   const [showPopover, setShowPopover] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState<Position>({
