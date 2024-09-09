@@ -7,37 +7,70 @@ import React, {
   useContext,
 } from "react";
 
+/**
+ * Represents the position of the popover.
+ */
 interface Position {
+  /** The top position of the popover in pixels. */
   top: number;
+  /** The left position of the popover in pixels. */
   left: number;
 }
 
+/**
+ * Props for the HighlightPopover component.
+ */
 interface HighlightPopoverProps {
+  /** The content where text selection will trigger the popover. */
   children: React.ReactNode;
+  /** Function to render the popover component. */
   renderPopover: (props: {
     position: Position;
     selection: string;
   }) => React.ReactNode;
+  /** Additional CSS class for the wrapper element. */
   className?: string;
+  /** Offset for adjusting popover position. */
   offset?: { x?: number; y?: number };
+  /** Minimum length of text selection to trigger the popover. */
   minSelectionLength?: number;
+  /** Callback fired when text selection starts. */
   onSelectionStart?: () => void;
+  /** Callback fired when text selection ends. */
   onSelectionEnd?: (selection: string) => void;
+  /** Callback fired when the popover is shown. */
   onPopoverShow?: () => void;
+  /** Callback fired when the popover is hidden. */
   onPopoverHide?: () => void;
 }
 
+/**
+ * Context type for the HighlightPopover.
+ */
 interface HighlightPopoverContextType {
+  /** Indicates whether the popover is currently visible. */
   showPopover: boolean;
+  /** Function to manually control popover visibility. */
   setShowPopover: React.Dispatch<React.SetStateAction<boolean>>;
+  /** Current position of the popover. */
   popoverPosition: Position;
+  /** Currently selected text. */
   currentSelection: string;
+  /** Function to manually set the current selection. */
   setCurrentSelection: React.Dispatch<React.SetStateAction<string>>;
 }
 
+/**
+ * Context for the HighlightPopover component.
+ */
 const HighlightPopoverContext =
   createContext<HighlightPopoverContextType | null>(null);
 
+/**
+ * Hook to access the HighlightPopover context.
+ * @returns The HighlightPopover context value.
+ * @throws Error if used outside of a HighlightPopover component.
+ */
 export function useHighlightPopover() {
   const context = useContext(HighlightPopoverContext);
   if (!context) {
@@ -48,6 +81,9 @@ export function useHighlightPopover() {
   return context;
 }
 
+/**
+ * HighlightPopover component for creating popovers on text selection within this container.
+ */
 export function HighlightPopover({
   children,
   renderPopover,
@@ -67,6 +103,11 @@ export function HighlightPopover({
   const [currentSelection, setCurrentSelection] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
+  /**
+   * Checks if the current selection is within the HighlightPopover container.
+   * @param selection - The current selection object.
+   * @returns True if the selection is within the container, false otherwise.
+   */
   const isSelectionWithinContainer = useCallback((selection: Selection) => {
     if (!containerRef.current) return false;
     for (let i = 0; i < selection.rangeCount; i++) {
@@ -81,6 +122,9 @@ export function HighlightPopover({
     return true;
   }, []);
 
+  /**
+   * Handles the text selection and popover positioning.
+   */
   const handleSelection = useCallback(() => {
     if (!containerRef.current) return;
 
@@ -121,6 +165,7 @@ export function HighlightPopover({
     onPopoverHide,
   ]);
 
+  // Add event listener for selection changes
   useEffect(() => {
     document.addEventListener("selectionchange", handleSelection);
     return () => {
@@ -128,6 +173,7 @@ export function HighlightPopover({
     };
   }, [handleSelection]);
 
+  // Handle clicks outside the popover
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
