@@ -5,6 +5,7 @@ import React, {
   useRef,
   createContext,
   useContext,
+  useMemo,
 } from "react";
 
 /**
@@ -42,6 +43,8 @@ interface HighlightPopoverProps {
   onPopoverShow?: () => void;
   /** Callback fired when the popover is hidden. */
   onPopoverHide?: () => void;
+  /** The z-index of the popover. */
+  zIndex?: number;
 }
 
 /**
@@ -94,6 +97,7 @@ export function HighlightPopover({
   onSelectionEnd,
   onPopoverShow,
   onPopoverHide,
+  zIndex = 40,
 }: HighlightPopoverProps) {
   const [showPopover, setShowPopover] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState<Position>({
@@ -199,6 +203,18 @@ export function HighlightPopover({
     setCurrentSelection,
   };
 
+  const popoverStyle = useMemo(
+    () => ({
+      zIndex,
+      width: "max-content",
+      position: "absolute" as const,
+      transform: "translateX(-50%)",
+      top: `${popoverPosition.top}px`,
+      left: `${popoverPosition.left}px`,
+    }),
+    [zIndex, popoverPosition.top, popoverPosition.left],
+  );
+
   return (
     <HighlightPopoverContext.Provider value={contextValue}>
       <div
@@ -208,18 +224,7 @@ export function HighlightPopover({
       >
         {children}
         {showPopover && (
-          <div
-            style={{
-              zIndex: 40,
-              width: "max-content",
-              position: "absolute",
-              transform: "translateX(-50%)",
-              top: `${popoverPosition.top}px`,
-              left: `${popoverPosition.left}px`,
-            }}
-            role="tooltip"
-            aira-live="polite"
-          >
+          <div style={popoverStyle} role="tooltip" aira-live="polite">
             {renderPopover({
               position: popoverPosition,
               selection: currentSelection,
