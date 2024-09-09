@@ -1,11 +1,11 @@
 import React, {
+  useRef,
+  useMemo,
   useState,
   useEffect,
   useCallback,
-  useRef,
   createContext,
   useContext,
-  useMemo,
 } from "react";
 
 /**
@@ -130,35 +130,38 @@ export function HighlightPopover({
    * Handles the text selection and popover positioning.
    */
   const handleSelection = useCallback(() => {
-    if (!containerRef.current) return;
+    requestAnimationFrame(() => {
+      if (!containerRef.current) return;
 
-    const selection = window.getSelection();
-    if (
-      selection &&
-      selection.toString().trim().length >= minSelectionLength &&
-      isSelectionWithinContainer(selection)
-    ) {
-      onSelectionStart?.();
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      const containerRect = containerRef.current.getBoundingClientRect();
+      const selection = window.getSelection();
+      if (
+        selection &&
+        selection.toString().trim().length >= minSelectionLength &&
+        isSelectionWithinContainer(selection)
+      ) {
+        onSelectionStart?.();
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        const containerRect = containerRef.current.getBoundingClientRect();
 
-      const top = rect.bottom - containerRect.top - (offset && (offset.y ?? 0));
-      const left =
-        rect.left -
-        containerRect.left +
-        rect.width / 2 +
-        (offset && (offset.x ?? 0));
+        const top =
+          rect.bottom - containerRect.top - (offset && (offset.y ?? 0));
+        const left =
+          rect.left -
+          containerRect.left +
+          rect.width / 2 +
+          (offset && (offset.x ?? 0));
 
-      setPopoverPosition({ top, left });
-      setCurrentSelection(selection.toString());
-      setShowPopover(true);
-      onPopoverShow?.();
-      onSelectionEnd?.(selection.toString());
-    } else {
-      setShowPopover(false);
-      onPopoverHide?.();
-    }
+        setPopoverPosition({ top, left });
+        setCurrentSelection(selection.toString());
+        setShowPopover(true);
+        onPopoverShow?.();
+        onSelectionEnd?.(selection.toString());
+      } else {
+        setShowPopover(false);
+        onPopoverHide?.();
+      }
+    });
   }, [
     isSelectionWithinContainer,
     minSelectionLength,
