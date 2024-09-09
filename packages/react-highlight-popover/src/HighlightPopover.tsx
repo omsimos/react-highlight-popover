@@ -32,6 +32,7 @@ interface HighlightPopoverContextType {
   setShowPopover: React.Dispatch<React.SetStateAction<boolean>>;
   popoverPosition: Position;
   currentSelection: string;
+  setCurrentSelection: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const HighlightPopoverContext =
@@ -149,6 +150,7 @@ export function HighlightPopover({
     setShowPopover,
     popoverPosition,
     currentSelection,
+    setCurrentSelection,
   };
 
   return (
