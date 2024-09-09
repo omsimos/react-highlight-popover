@@ -217,6 +217,8 @@ export function HighlightPopover({
               top: `${popoverPosition.top}px`,
               left: `${popoverPosition.left}px`,
             }}
+            role="tooltip"
+            aira-live="polite"
           >
             {renderPopover({
               position: popoverPosition,
