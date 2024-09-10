@@ -3,8 +3,8 @@ import { expect, test, describe, beforeEach, mock } from "bun:test";
 
 import { HighlightPopover } from "@omsimos/react-highlight-popover";
 
-mock.module("../src/HighlightPopover", () => {
-  const originalModule = require("../src/HighlightPopover");
+mock.module("@omsimos/react-highlight-popoover", async () => {
+  const originalModule = await import("@omsimos/react-highlight-popover");
   return {
     ...originalModule,
     useHighlightPopover: mock(() => ({
@@ -58,8 +58,8 @@ describe("HighlightPopover", () => {
   });
 
   test("hides popover when clicking outside", () => {
-    mock.module("../src/HighlightPopover", () => ({
-      ...require("../src/HighlightPopover"),
+    mock.module("@omsimos/react-highlight-popoover", async () => ({
+      ...(await import("@omsimos/react-highlight-popover")),
       useHighlightPopover: mock(() => ({
         showPopover: true,
         setShowPopover: mock(),
