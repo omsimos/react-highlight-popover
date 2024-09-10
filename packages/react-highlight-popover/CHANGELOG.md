@@ -1,5 +1,34 @@
 # @omsimos/react-highlight-popover
 
+## 1.1.0
+
+### Minor Changes
+
+- # v1.1.0
+
+  ### New Features 🚀
+
+  - **Enhanced Hook Functionality**: The `useHighlightPopover` hook now exposes `setCurrentSelection`, allowing for more flexible control over the selected text.
+  - **Improved Performance**: Implemented `requestAnimationFrame()` for handling text selection, resulting in smoother updates and better overall performance.
+
+  ### Improvements 🛠️
+
+  - **Better Documentation**: Added JSDoc comments throughout the codebase, improving developer experience with better type hints and function descriptions.
+  - **Accessibility Enhancements**: Added ARIA attributes to improve screen reader compatibility and overall accessibility.
+  - **Optimized Rendering**: Memoized the popover style object to reduce unnecessary re-renders and improve performance.
+
+  ### Under The Hood 🔧
+
+  - Various code optimizations and refactoring for better maintainability and performance.
+
+  ## Upgrade Instructions
+
+  To upgrade to v1.1.0, run:
+
+  ```bash
+  npm install @omsimos/react-highlight-popover@latest
+  ```
+
 ## 1.0.0
 
 ### Major Changes
