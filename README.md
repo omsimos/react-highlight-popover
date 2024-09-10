@@ -4,6 +4,12 @@ A customizable, headless React component for creating popovers on text selection
 
 ![image](https://github.com/user-attachments/assets/83db38a0-be61-4ad8-a8c8-e31c1f2e4312)
 
+<div>
+  <img src="https://github.com/omsimos/react-highlight-popover/actions/workflows/ci.yml/badge.svg" alt="actions">
+  <img src="https://img.shields.io/github/v/release/omsimos/react-highlight-popover.svg" alt="releases">
+  <img src="https://img.shields.io/github/stars/omsimos/react-highlight-popover" alt="stars">
+</div>
+
 ## Features
 
 - 🎯 Easy-to-use React component with zero dependencies
