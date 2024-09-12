@@ -227,7 +227,7 @@ export function HighlightPopover({
       >
         {children}
         {showPopover && (
-          <div style={popoverStyle} role="tooltip" aira-live="polite">
+          <div style={popoverStyle} role="tooltip" aria-live="polite">
             {renderPopover({
               position: popoverPosition,
               selection: currentSelection,
