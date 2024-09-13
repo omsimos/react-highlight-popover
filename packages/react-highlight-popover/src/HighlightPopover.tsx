@@ -19,6 +19,11 @@ interface Position {
 }
 
 /**
+ * Defines the possible alignment options for the popover.
+ */
+type PopoverAlignment = 'left' | 'center' | 'right';
+
+/**
  * Props for the HighlightPopover component.
  */
 interface HighlightPopoverProps {
@@ -35,6 +40,8 @@ interface HighlightPopoverProps {
   offset?: { x?: number; y?: number };
   /** The z-index of the popover. */
   zIndex?: number;
+  /** Alignment of the popover relative to the selected text. */
+  alignment?: PopoverAlignment;
   /** Minimum length of text selection to trigger the popover. */
   minSelectionLength?: number;
   /** Callback fired when text selection starts. */
@@ -87,6 +94,7 @@ export function HighlightPopover({
   className = "",
   offset = { x: 0, y: 0 },
   zIndex = 40,
+  alignment = 'center',
   minSelectionLength = 1,
   onSelectionStart,
   onSelectionEnd,
@@ -119,7 +127,7 @@ export function HighlightPopover({
   }, []);
 
   /**
-   * Updates the popover position based on the current selection and container scroll position.
+   * Updates the popover position based on the current selection, container scroll position, and alignment.
    */
   const updatePopoverPosition = useCallback(() => {
     if (!containerRef.current || !selectionRangeRef.current) return;
@@ -132,10 +140,23 @@ export function HighlightPopover({
     const scrollLeft = containerRef.current.scrollLeft;
 
     const top = rect.bottom - containerRect.top + scrollTop - (offset.y ?? 0);
-    const left = rect.left - containerRect.left + scrollLeft + rect.width / 2 + (offset.x ?? 0);
+    let left: number;
+
+    switch (alignment) {
+      case 'left':
+        left = rect.left - containerRect.left + scrollLeft + (offset.x ?? 0);
+        break;
+      case 'right':
+        left = rect.right - containerRect.left + scrollLeft - (offset.x ?? 0);
+        break;
+      case 'center':
+      default:
+        left = rect.left - containerRect.left + scrollLeft + rect.width / 2 + (offset.x ?? 0);
+        break;
+    }
 
     setPopoverPosition({ top, left });
-  }, [offset]);
+  }, [offset, alignment]);
 
   /**
    * Handles the text selection and popover positioning.
@@ -227,11 +248,15 @@ export function HighlightPopover({
       zIndex,
       width: "max-content",
       position: "absolute" as const,
-      transform: "translateX(-50%)",
       top: `${popoverPosition.top}px`,
-      left: `${popoverPosition.left}px`,
+      ...(alignment === 'left' && { left: `${popoverPosition.left}px` }),
+      ...(alignment === 'center' && {
+        left: `${popoverPosition.left}px`,
+        transform: "translateX(-50%)",
+      }),
+      ...(alignment === 'right' && { right: `calc(100% - ${popoverPosition.left}px)` }),
     }),
-    [zIndex, popoverPosition.top, popoverPosition.left]
+    [zIndex, popoverPosition.top, popoverPosition.left, alignment]
   );
 
   return (
