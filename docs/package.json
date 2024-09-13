@@ -15,6 +15,7 @@
     "@omsimos/react-highlight-popover": "*",
     "@types/mdx": "^2.0.13",
     "next": "^14.2.11",
+    "nextjs-toploader": "^3.6.15",
     "react": "^18",
     "react-dom": "^18",
     "rehype-pretty-code": "^0.14.0",
