@@ -9,7 +9,6 @@ A customizable, headless React component for creating popovers on text selection
   <a href="https://www.npmjs.com/package/@omsimos/react-highlight-popover">
     <img alt="NPM Version" src="https://img.shields.io/npm/v/%40omsimos%2Freact-highlight-popover?logo=npm&labelColor=%23cc3534&color=%23505050">
   </a>
-  <img alt="NPM Version" src="https://img.shields.io/npm/v/%40omsimos%2Freact-highlight-popover?logo=npm&labelColor=%23cc3534&color=%23505050">
   <img src="https://img.shields.io/bundlephobia/minzip/%40omsimos%2Freact-highlight-popover" alt="npm bundle size" >
 </div>
 
