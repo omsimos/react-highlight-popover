@@ -63,11 +63,7 @@ interface HighlightPopoverContextType {
   setCurrentSelection: React.Dispatch<React.SetStateAction<string>>;
 }
 
-/**
- * Context for the HighlightPopover component.
- */
-const HighlightPopoverContext =
-  createContext<HighlightPopoverContextType | null>(null);
+const HighlightPopoverContext = createContext<HighlightPopoverContextType | null>(null);
 
 /**
  * Hook to access the HighlightPopover context.
@@ -77,15 +73,13 @@ const HighlightPopoverContext =
 export function useHighlightPopover() {
   const context = useContext(HighlightPopoverContext);
   if (!context) {
-    throw new Error(
-      "useHighlightPopover must be used within a HighlightPopover",
-    );
+    throw new Error("useHighlightPopover must be used within a HighlightPopover");
   }
   return context;
 }
 
 /**
- * HighlightPopover component for creating popovers on text selection within this container.
+ * HighlightPopover component for creating popovers on text selection within a container.
  */
 export function HighlightPopover({
   children,
@@ -100,12 +94,10 @@ export function HighlightPopover({
   onPopoverHide,
 }: HighlightPopoverProps) {
   const [showPopover, setShowPopover] = useState(false);
-  const [popoverPosition, setPopoverPosition] = useState<Position>({
-    top: 0,
-    left: 0,
-  });
+  const [popoverPosition, setPopoverPosition] = useState<Position>({ top: 0, left: 0 });
   const [currentSelection, setCurrentSelection] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
+  const selectionRangeRef = useRef<Range | null>(null);
 
   /**
    * Checks if the current selection is within the HighlightPopover container.
@@ -127,6 +119,25 @@ export function HighlightPopover({
   }, []);
 
   /**
+   * Updates the popover position based on the current selection and container scroll position.
+   */
+  const updatePopoverPosition = useCallback(() => {
+    if (!containerRef.current || !selectionRangeRef.current) return;
+
+    const range = selectionRangeRef.current;
+    const rect = range.getBoundingClientRect();
+    const containerRect = containerRef.current.getBoundingClientRect();
+
+    const scrollTop = containerRef.current.scrollTop;
+    const scrollLeft = containerRef.current.scrollLeft;
+
+    const top = rect.bottom - containerRect.top + scrollTop - (offset.y ?? 0);
+    const left = rect.left - containerRect.left + scrollLeft + rect.width / 2 + (offset.x ?? 0);
+
+    setPopoverPosition({ top, left });
+  }, [offset]);
+
+  /**
    * Handles the text selection and popover positioning.
    */
   const handleSelection = useCallback(() => {
@@ -141,18 +152,9 @@ export function HighlightPopover({
       ) {
         onSelectionStart?.();
         const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        const containerRect = containerRef.current.getBoundingClientRect();
+        selectionRangeRef.current = range;
 
-        const top =
-          rect.bottom - containerRect.top - (offset && (offset.y ?? 0));
-        const left =
-          rect.left -
-          containerRect.left +
-          rect.width / 2 +
-          (offset && (offset.x ?? 0));
-
-        setPopoverPosition({ top, left });
+        updatePopoverPosition();
         setCurrentSelection(selection.toString());
         setShowPopover(true);
         onPopoverShow?.();
@@ -165,11 +167,11 @@ export function HighlightPopover({
   }, [
     isSelectionWithinContainer,
     minSelectionLength,
-    offset,
     onSelectionStart,
     onSelectionEnd,
     onPopoverShow,
     onPopoverHide,
+    updatePopoverPosition,
   ]);
 
   // Add event listener for selection changes
@@ -183,10 +185,7 @@ export function HighlightPopover({
   // Handle clicks outside the popover
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setShowPopover(false);
         onPopoverHide?.();
       }
@@ -197,6 +196,23 @@ export function HighlightPopover({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onPopoverHide]);
+
+  // Handle container scroll
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      if (showPopover) {
+        updatePopoverPosition();
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, [showPopover, updatePopoverPosition]);
 
   const contextValue: HighlightPopoverContextType = {
     showPopover,
@@ -215,16 +231,12 @@ export function HighlightPopover({
       top: `${popoverPosition.top}px`,
       left: `${popoverPosition.left}px`,
     }),
-    [zIndex, popoverPosition.top, popoverPosition.left],
+    [zIndex, popoverPosition.top, popoverPosition.left]
   );
 
   return (
     <HighlightPopoverContext.Provider value={contextValue}>
-      <div
-        ref={containerRef}
-        style={{ position: "relative" }}
-        className={className}
-      >
+      <div ref={containerRef} style={{ position: "relative" }} className={className}>
         {children}
         {showPopover && (
           <div style={popoverStyle} role="tooltip" aria-live="polite">
