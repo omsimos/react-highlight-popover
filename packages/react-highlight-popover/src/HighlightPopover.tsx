@@ -21,7 +21,7 @@ interface Position {
 /**
  * Defines the possible alignment options for the popover.
  */
-type PopoverAlignment = 'left' | 'center' | 'right';
+type PopoverAlignment = "left" | "center" | "right";
 
 /**
  * Props for the HighlightPopover component.
@@ -70,7 +70,8 @@ interface HighlightPopoverContextType {
   setCurrentSelection: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const HighlightPopoverContext = createContext<HighlightPopoverContextType | null>(null);
+const HighlightPopoverContext =
+  createContext<HighlightPopoverContextType | null>(null);
 
 /**
  * Hook to access the HighlightPopover context.
@@ -80,7 +81,9 @@ const HighlightPopoverContext = createContext<HighlightPopoverContextType | null
 export function useHighlightPopover() {
   const context = useContext(HighlightPopoverContext);
   if (!context) {
-    throw new Error("useHighlightPopover must be used within a HighlightPopover");
+    throw new Error(
+      "useHighlightPopover must be used within a HighlightPopover",
+    );
   }
   return context;
 }
@@ -94,7 +97,7 @@ export function HighlightPopover({
   className = "",
   offset = { x: 0, y: 0 },
   zIndex = 40,
-  alignment = 'center',
+  alignment = "center",
   minSelectionLength = 1,
   onSelectionStart,
   onSelectionEnd,
@@ -102,7 +105,10 @@ export function HighlightPopover({
   onPopoverHide,
 }: HighlightPopoverProps) {
   const [showPopover, setShowPopover] = useState(false);
-  const [popoverPosition, setPopoverPosition] = useState<Position>({ top: 0, left: 0 });
+  const [popoverPosition, setPopoverPosition] = useState<Position>({
+    top: 0,
+    left: 0,
+  });
   const [currentSelection, setCurrentSelection] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const selectionRangeRef = useRef<Range | null>(null);
@@ -116,6 +122,10 @@ export function HighlightPopover({
     if (!containerRef.current) return false;
     for (let i = 0; i < selection.rangeCount; i++) {
       const range = selection.getRangeAt(i);
+      if (!containerRef.current.contains(range.commonAncestorContainer)) {
+        return false; // If common ancestor is not in container, the entire range is outside
+      }
+
       if (
         !containerRef.current.contains(range.startContainer) ||
         !containerRef.current.contains(range.endContainer)
@@ -143,15 +153,20 @@ export function HighlightPopover({
     let left: number;
 
     switch (alignment) {
-      case 'left':
+      case "left":
         left = rect.left - containerRect.left + scrollLeft + (offset.x ?? 0);
         break;
-      case 'right':
+      case "right":
         left = rect.right - containerRect.left + scrollLeft - (offset.x ?? 0);
         break;
-      case 'center':
+      case "center":
       default:
-        left = rect.left - containerRect.left + scrollLeft + rect.width / 2 + (offset.x ?? 0);
+        left =
+          rect.left -
+          containerRect.left +
+          scrollLeft +
+          rect.width / 2 +
+          (offset.x ?? 0);
         break;
     }
 
@@ -206,7 +221,10 @@ export function HighlightPopover({
   // Handle clicks outside the popover
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setShowPopover(false);
         onPopoverHide?.();
       }
@@ -249,19 +267,25 @@ export function HighlightPopover({
       width: "max-content",
       position: "absolute" as const,
       top: `${popoverPosition.top}px`,
-      ...(alignment === 'left' && { left: `${popoverPosition.left}px` }),
-      ...(alignment === 'center' && {
+      ...(alignment === "left" && { left: `${popoverPosition.left}px` }),
+      ...(alignment === "center" && {
         left: `${popoverPosition.left}px`,
         transform: "translateX(-50%)",
       }),
-      ...(alignment === 'right' && { right: `calc(100% - ${popoverPosition.left}px)` }),
+      ...(alignment === "right" && {
+        right: `calc(100% - ${popoverPosition.left}px)`,
+      }),
     }),
-    [zIndex, popoverPosition.top, popoverPosition.left, alignment]
+    [zIndex, popoverPosition.top, popoverPosition.left, alignment],
   );
 
   return (
     <HighlightPopoverContext.Provider value={contextValue}>
-      <div ref={containerRef} style={{ position: "relative" }} className={className}>
+      <div
+        ref={containerRef}
+        style={{ position: "relative" }}
+        className={className}
+      >
         {children}
         {showPopover && (
           <div style={popoverStyle} role="tooltip" aria-live="polite">
