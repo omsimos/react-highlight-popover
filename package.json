@@ -18,8 +18,8 @@
   },
   "packageManager": "bun@1.1.27",
   "workspaces": [
-    "apps/*",
-    "packages/*",
+    "docs",
+    "lib",
     "tests"
   ],
   "dependencies": {
