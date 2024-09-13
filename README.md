@@ -2,12 +2,15 @@
 
 A customizable, headless React component for creating popovers on text selection, with zero dependencies.
 
-![image](https://github.com/user-attachments/assets/83db38a0-be61-4ad8-a8c8-e31c1f2e4312)
+![React Highlight Popover Background](https://github.com/user-attachments/assets/236ebac4-f40c-4895-b23f-baac20db93a9)
 
 <div>
   <img src="https://github.com/omsimos/react-highlight-popover/actions/workflows/ci.yml/badge.svg" alt="actions">
-  <img src="https://img.shields.io/github/v/release/omsimos/react-highlight-popover.svg" alt="releases">
-  <img src="https://img.shields.io/github/stars/omsimos/react-highlight-popover" alt="stars">
+  <a href="https://www.npmjs.com/package/@omsimos/react-highlight-popover">
+    <img alt="NPM Version" src="https://img.shields.io/npm/v/%40omsimos%2Freact-highlight-popover?logo=npm&labelColor=%23cc3534&color=%23505050">
+  </a>
+  <img alt="NPM Version" src="https://img.shields.io/npm/v/%40omsimos%2Freact-highlight-popover?logo=npm&labelColor=%23cc3534&color=%23505050">
+  <img src="https://img.shields.io/bundlephobia/minzip/%40omsimos%2Freact-highlight-popover" alt="npm bundle size" >
 </div>
 
 ## Features
@@ -24,16 +27,10 @@ A customizable, headless React component for creating popovers on text selection
 
 ## Installation
 
-Install the package using npm:
+Add the package using your package manager:
 
 ```sh
-npm install @omsimos/react-highlight-popover
-```
-
-Or using pnpm:
-
-```sh
-pnpm add @omsimos/react-highlight-popover
+npm i @omsimos/react-highlight-popover
 ```
 
 ## Usage
@@ -74,6 +71,7 @@ export default App;
 | `className` | `string` | `''` | Additional CSS class for the wrapper element |
 | `offset` | `{ x?: number, y?: number }` | `{ x: 0, y: 0 }` | Offset for adjusting popover position |
 | `zIndex` | `number` | `40` | The z-index of the popover |
+| `alignment` | `'left'` \| `'center'` \| `'right'` | `'center'` | Alignment of the popover relative to the selected text |
 | `minSelectionLength` | `number` | `1` | Minimum length of text selection to trigger the popover |
 | `onSelectionStart` | `() => void` | `undefined` | Callback fired when text selection starts |
 | `onSelectionEnd` | `(selection: string) => void` | `undefined` | Callback fired when text selection ends |

@@ -2,36 +2,21 @@
 
 A customizable, headless React component for creating popovers on text selection, with zero dependencies.
 
-## Features
-
-- 🎯 Easy-to-use React component with zero dependencies
-- 🧠 Headless component for maximum flexibility
-- 🎨 Fully customizable popover content and styling
-- 🎭 Smooth rendering with minimal re-renders
-- 📏 Configurable minimum selection length
-- 🖱️ Automatic positioning based on text selection
-- 🎛️ Customizable offset for adjusting popover position
-- 🔄 Event callbacks for selection and popover lifecycle
-- 🔌 Extensible architecture for advanced use cases
-
 ## Contents
 
 * [Installation](#installation)
 * [Usage](#usage)
-* [API](#api)
+* [API Reference](#api)
+  * [HighlightPopover Props](#highlightpopover-props)
+  * [useHighlightPopover Hook](#usehighlightpopover-hook)
+* [Advanced Example](#advanced-example)
 
 ## Installation
 
-Install the package using npm:
+Add the package using your package manager:
 
 ```sh
 npm i @omsimos/react-highlight-popover
-```
-
-Or using pnpm:
-
-```sh
-pnpm add @omsimos/react-highlight-popover
 ```
 
 ## Usage
@@ -72,6 +57,7 @@ export default App;
 | `className` | `string` | `''` | Additional CSS class for the wrapper element |
 | `offset` | `{ x?: number, y?: number }` | `{ x: 0, y: 0 }` | Offset for adjusting popover position |
 | `zIndex` | `number` | `40` | The z-index of the popover |
+| `alignment` | `'left'` \| `'center'` \| `'right'` | `'center'` | Alignment of the popover relative to the selected text |
 | `minSelectionLength` | `number` | `1` | Minimum length of text selection to trigger the popover |
 | `onSelectionStart` | `() => void` | `undefined` | Callback fired when text selection starts |
 | `onSelectionEnd` | `(selection: string) => void` | `undefined` | Callback fired when text selection ends |
