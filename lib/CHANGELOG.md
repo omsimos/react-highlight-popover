@@ -1,10 +1,33 @@
 # @omsimos/react-highlight-popover
 
-## 1.1.0
+## 1.2.0
 
 ### Minor Changes
 
-- # v1.1.0
+- ### New Features 🚀
+
+  - **Alignment Prop for Popover**: Introduced a new `alignment` prop that allows for positioning the popover relative to the selected text. Supported values: `'left'`, `'center'`, `'right'`. The default is set to `'center'`.
+
+  ### Bug Fixes 🐞
+
+  - **Resolved ARIA Typo**: Fixed a typo in the ARIA attribute to improve accessibility.
+
+  ### Under The Hood 🔧
+
+  - **ESM-Only Package**: The package has been converted to ESM-only, improving compatibility with modern JavaScript environments.
+  - **Minified Package Output**: Reduced the bundle size by minifying the package output, leading to better performance and faster load times.
+
+  ## Upgrade Instructions
+
+  To upgrade to v1.2.0, run:
+
+  ```bash
+  npm install @omsimos/react-highlight-popover@latest
+  ```
+
+## 1.1.0
+
+### Minor Changes
 
   ### New Features 🚀
 

@@ -19,6 +19,11 @@ interface Position {
 }
 
 /**
+ * Defines the possible alignment options for the popover.
+ */
+type PopoverAlignment = "left" | "center" | "right";
+
+/**
  * Props for the HighlightPopover component.
  */
 interface HighlightPopoverProps {
@@ -35,6 +40,8 @@ interface HighlightPopoverProps {
   offset?: { x?: number; y?: number };
   /** The z-index of the popover. */
   zIndex?: number;
+  /** Alignment of the popover relative to the selected text. */
+  alignment?: PopoverAlignment;
   /** Minimum length of text selection to trigger the popover. */
   minSelectionLength?: number;
   /** Callback fired when text selection starts. */
@@ -63,9 +70,6 @@ interface HighlightPopoverContextType {
   setCurrentSelection: React.Dispatch<React.SetStateAction<string>>;
 }
 
-/**
- * Context for the HighlightPopover component.
- */
 const HighlightPopoverContext =
   createContext<HighlightPopoverContextType | null>(null);
 
@@ -85,7 +89,7 @@ export function useHighlightPopover() {
 }
 
 /**
- * HighlightPopover component for creating popovers on text selection within this container.
+ * HighlightPopover component for creating popovers on text selection within a container.
  */
 export function HighlightPopover({
   children,
@@ -93,6 +97,7 @@ export function HighlightPopover({
   className = "",
   offset = { x: 0, y: 0 },
   zIndex = 40,
+  alignment = "center",
   minSelectionLength = 1,
   onSelectionStart,
   onSelectionEnd,
@@ -106,6 +111,7 @@ export function HighlightPopover({
   });
   const [currentSelection, setCurrentSelection] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
+  const selectionRangeRef = useRef<Range | null>(null);
 
   /**
    * Checks if the current selection is within the HighlightPopover container.
@@ -116,6 +122,10 @@ export function HighlightPopover({
     if (!containerRef.current) return false;
     for (let i = 0; i < selection.rangeCount; i++) {
       const range = selection.getRangeAt(i);
+      if (!containerRef.current.contains(range.commonAncestorContainer)) {
+        return false; // If common ancestor is not in container, the entire range is outside
+      }
+
       if (
         !containerRef.current.contains(range.startContainer) ||
         !containerRef.current.contains(range.endContainer)
@@ -125,6 +135,36 @@ export function HighlightPopover({
     }
     return true;
   }, []);
+
+  /**
+   * Updates the popover position based on the current selection and alignment.
+   */
+  const updatePopoverPosition = useCallback(() => {
+    if (!containerRef.current || !selectionRangeRef.current) return;
+
+    const range = selectionRangeRef.current;
+    const rect = range.getBoundingClientRect();
+    const containerRect = containerRef.current.getBoundingClientRect();
+
+    const top = rect.bottom - containerRect.top - (offset.y ?? 0);
+    let left: number;
+
+    switch (alignment) {
+      case "left":
+        left = rect.left - containerRect.left + (offset.x ?? 0);
+        break;
+      case "right":
+        left = rect.right - containerRect.left - (offset.x ?? 0);
+        break;
+      case "center":
+      default:
+        left =
+          rect.left - containerRect.left + rect.width / 2 + (offset.x ?? 0);
+        break;
+    }
+
+    setPopoverPosition({ top, left });
+  }, [offset, alignment]);
 
   /**
    * Handles the text selection and popover positioning.
@@ -141,18 +181,9 @@ export function HighlightPopover({
       ) {
         onSelectionStart?.();
         const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        const containerRect = containerRef.current.getBoundingClientRect();
+        selectionRangeRef.current = range;
 
-        const top =
-          rect.bottom - containerRect.top - (offset && (offset.y ?? 0));
-        const left =
-          rect.left -
-          containerRect.left +
-          rect.width / 2 +
-          (offset && (offset.x ?? 0));
-
-        setPopoverPosition({ top, left });
+        updatePopoverPosition();
         setCurrentSelection(selection.toString());
         setShowPopover(true);
         onPopoverShow?.();
@@ -165,11 +196,11 @@ export function HighlightPopover({
   }, [
     isSelectionWithinContainer,
     minSelectionLength,
-    offset,
     onSelectionStart,
     onSelectionEnd,
     onPopoverShow,
     onPopoverHide,
+    updatePopoverPosition,
   ]);
 
   // Add event listener for selection changes
@@ -211,11 +242,17 @@ export function HighlightPopover({
       zIndex,
       width: "max-content",
       position: "absolute" as const,
-      transform: "translateX(-50%)",
       top: `${popoverPosition.top}px`,
-      left: `${popoverPosition.left}px`,
+      ...(alignment === "left" && { left: `${popoverPosition.left}px` }),
+      ...(alignment === "center" && {
+        left: `${popoverPosition.left}px`,
+        transform: "translateX(-50%)",
+      }),
+      ...(alignment === "right" && {
+        right: `calc(100% - ${popoverPosition.left}px)`,
+      }),
     }),
-    [zIndex, popoverPosition.top, popoverPosition.left],
+    [zIndex, popoverPosition.top, popoverPosition.left, alignment],
   );
 
   return (
@@ -227,7 +264,7 @@ export function HighlightPopover({
       >
         {children}
         {showPopover && (
-          <div style={popoverStyle} role="tooltip" aira-live="polite">
+          <div style={popoverStyle} role="tooltip" aria-live="polite">
             {renderPopover({
               position: popoverPosition,
               selection: currentSelection,

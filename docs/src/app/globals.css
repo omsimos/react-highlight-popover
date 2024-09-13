@@ -12,6 +12,15 @@ body {
   background: var(--background);
 }
 
+pre {
+  overflow-x: auto;
+  padding: 1rem 0;
+}
+
+pre [data-line] {
+  padding: 0 1rem;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

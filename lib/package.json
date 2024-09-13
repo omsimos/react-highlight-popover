@@ -1,7 +1,7 @@
 {
   "name": "@omsimos/react-highlight-popover",
-  "version": "1.1.0",
-  "main": "dist/index.cjs",
+  "version": "1.2.0",
+  "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -11,8 +11,8 @@
     "package.json"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch"
+    "build": "tsup src/index.ts --format esm --dts --minify",
+    "dev": "tsup src/index.ts --format esm --dts --minify --watch"
   },
   "keywords": [
     "react",
@@ -34,7 +34,7 @@
   "bugs": {
     "url": "https://github.com/omsimos/react-highlight-popover/issues"
   },
-  "homepage": "https://github.com/omsimos/react-highlight-popover",
+  "homepage": "https://react-highlight-popover.omsimos.com",
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
