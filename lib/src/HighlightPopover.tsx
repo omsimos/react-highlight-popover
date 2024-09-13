@@ -137,7 +137,7 @@ export function HighlightPopover({
   }, []);
 
   /**
-   * Updates the popover position based on the current selection, container scroll position, and alignment.
+   * Updates the popover position based on the current selection and alignment.
    */
   const updatePopoverPosition = useCallback(() => {
     if (!containerRef.current || !selectionRangeRef.current) return;
@@ -146,27 +146,20 @@ export function HighlightPopover({
     const rect = range.getBoundingClientRect();
     const containerRect = containerRef.current.getBoundingClientRect();
 
-    const scrollTop = containerRef.current.scrollTop;
-    const scrollLeft = containerRef.current.scrollLeft;
-
-    const top = rect.bottom - containerRect.top + scrollTop - (offset.y ?? 0);
+    const top = rect.bottom - containerRect.top - (offset.y ?? 0);
     let left: number;
 
     switch (alignment) {
       case "left":
-        left = rect.left - containerRect.left + scrollLeft + (offset.x ?? 0);
+        left = rect.left - containerRect.left + (offset.x ?? 0);
         break;
       case "right":
-        left = rect.right - containerRect.left + scrollLeft - (offset.x ?? 0);
+        left = rect.right - containerRect.left - (offset.x ?? 0);
         break;
       case "center":
       default:
         left =
-          rect.left -
-          containerRect.left +
-          scrollLeft +
-          rect.width / 2 +
-          (offset.x ?? 0);
+          rect.left - containerRect.left + rect.width / 2 + (offset.x ?? 0);
         break;
     }
 
@@ -235,23 +228,6 @@ export function HighlightPopover({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onPopoverHide]);
-
-  // Handle container scroll
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      if (showPopover) {
-        updatePopoverPosition();
-      }
-    };
-
-    container.addEventListener("scroll", handleScroll);
-    return () => {
-      container.removeEventListener("scroll", handleScroll);
-    };
-  }, [showPopover, updatePopoverPosition]);
 
   const contextValue: HighlightPopoverContextType = {
     showPopover,
