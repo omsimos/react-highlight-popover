@@ -1,11 +1,12 @@
 import React, {
+  memo,
   useRef,
   useMemo,
   useState,
   useEffect,
+  useContext,
   useCallback,
   createContext,
-  useContext,
 } from "react";
 
 /**
@@ -89,9 +90,32 @@ export function useHighlightPopover() {
 }
 
 /**
+ * Memoized component for rendering the popover content.
+ */
+const PopoverContent = memo(
+  ({
+    renderPopover,
+    position,
+    selection,
+    style,
+  }: {
+    renderPopover: HighlightPopoverProps["renderPopover"];
+    position: Position;
+    selection: string;
+    style: React.CSSProperties;
+  }) => (
+    <div style={style} role="tooltip" aria-live="polite">
+      {renderPopover({ position, selection })}
+    </div>
+  ),
+);
+
+PopoverContent.displayName = "PopoverContent";
+
+/**
  * HighlightPopover component for creating popovers on text selection within a container.
  */
-export function HighlightPopover({
+export const HighlightPopover = memo(function HighlightPopover({
   children,
   renderPopover,
   className = "",
@@ -120,20 +144,15 @@ export function HighlightPopover({
    */
   const isSelectionWithinContainer = useCallback((selection: Selection) => {
     if (!containerRef.current) return false;
-    for (let i = 0; i < selection.rangeCount; i++) {
+    const container = containerRef.current;
+    return Array.from({ length: selection.rangeCount }).every((_, i) => {
       const range = selection.getRangeAt(i);
-      if (!containerRef.current.contains(range.commonAncestorContainer)) {
-        return false; // If common ancestor is not in container, the entire range is outside
-      }
-
-      if (
-        !containerRef.current.contains(range.startContainer) ||
-        !containerRef.current.contains(range.endContainer)
-      ) {
-        return false;
-      }
-    }
-    return true;
+      return (
+        container.contains(range.commonAncestorContainer) &&
+        container.contains(range.startContainer) &&
+        container.contains(range.endContainer)
+      );
+    });
   }, []);
 
   /**
@@ -170,29 +189,25 @@ export function HighlightPopover({
    * Handles the text selection and popover positioning.
    */
   const handleSelection = useCallback(() => {
-    requestAnimationFrame(() => {
-      if (!containerRef.current) return;
+    const selection = window.getSelection();
+    if (
+      selection &&
+      selection.toString().trim().length >= minSelectionLength &&
+      isSelectionWithinContainer(selection)
+    ) {
+      onSelectionStart?.();
+      const range = selection.getRangeAt(0);
+      selectionRangeRef.current = range;
 
-      const selection = window.getSelection();
-      if (
-        selection &&
-        selection.toString().trim().length >= minSelectionLength &&
-        isSelectionWithinContainer(selection)
-      ) {
-        onSelectionStart?.();
-        const range = selection.getRangeAt(0);
-        selectionRangeRef.current = range;
-
-        updatePopoverPosition();
-        setCurrentSelection(selection.toString());
-        setShowPopover(true);
-        onPopoverShow?.();
-        onSelectionEnd?.(selection.toString());
-      } else {
-        setShowPopover(false);
-        onPopoverHide?.();
-      }
-    });
+      updatePopoverPosition();
+      setCurrentSelection(selection.toString());
+      setShowPopover(true);
+      onPopoverShow?.();
+      onSelectionEnd?.(selection.toString());
+    } else {
+      setShowPopover(false);
+      onPopoverHide?.();
+    }
   }, [
     isSelectionWithinContainer,
     minSelectionLength,
@@ -205,9 +220,13 @@ export function HighlightPopover({
 
   // Add event listener for selection changes
   useEffect(() => {
-    document.addEventListener("selectionchange", handleSelection);
+    const handleSelectionChange = () => {
+      requestAnimationFrame(handleSelection);
+    };
+
+    document.addEventListener("selectionchange", handleSelectionChange);
     return () => {
-      document.removeEventListener("selectionchange", handleSelection);
+      document.removeEventListener("selectionchange", handleSelectionChange);
     };
   }, [handleSelection]);
 
@@ -229,13 +248,16 @@ export function HighlightPopover({
     };
   }, [onPopoverHide]);
 
-  const contextValue: HighlightPopoverContextType = {
-    showPopover,
-    setShowPopover,
-    popoverPosition,
-    currentSelection,
-    setCurrentSelection,
-  };
+  const contextValue = useMemo<HighlightPopoverContextType>(
+    () => ({
+      showPopover,
+      setShowPopover,
+      popoverPosition,
+      currentSelection,
+      setCurrentSelection,
+    }),
+    [showPopover, popoverPosition, currentSelection],
+  );
 
   const popoverStyle = useMemo(
     () => ({
@@ -264,14 +286,14 @@ export function HighlightPopover({
       >
         {children}
         {showPopover && (
-          <div style={popoverStyle} role="tooltip" aria-live="polite">
-            {renderPopover({
-              position: popoverPosition,
-              selection: currentSelection,
-            })}
-          </div>
+          <PopoverContent
+            renderPopover={renderPopover}
+            position={popoverPosition}
+            selection={currentSelection}
+            style={popoverStyle}
+          />
         )}
       </div>
     </HighlightPopoverContext.Provider>
   );
-}
+});

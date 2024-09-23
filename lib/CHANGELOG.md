@@ -1,5 +1,28 @@
 # @omsimos/react-highlight-popover
 
+## 1.3.0
+
+### Minor Changes
+
+- ### Performance Improvements 🚀
+
+  - **Memoized Components**: Both the main `HighlightPopover` component and the new `PopoverContent` component are now memoized using `React.memo()`, significantly reducing unnecessary re-renders.
+  - **Optimized Event Handling**: The `selectionchange` event listener now uses `requestAnimationFrame` to batch updates, reducing the frequency of calculations and improving overall performance.
+  - **Reduced State Updates**: The `handleSelection` function now checks conditions before updating state, minimizing unnecessary renders.
+  - **Memoized Context Value**: The `contextValue` is now memoized to prevent unnecessary re-renders of context consumers.
+
+  ### Documentation 📚
+
+  - **Updated Basic Example**: The basic usage example in the documentation now demonstrates the use of the `useHighlightPopover` hook, providing a more comprehensive illustration of the component's capabilities.
+
+  ## Upgrade Instructions
+
+  To upgrade to v1.3.0, run:
+
+  ```bash
+  npm install @omsimos/react-highlight-popover@latest
+  ```
+
 ## 1.2.0
 
 ### Minor Changes
@@ -29,28 +52,28 @@
 
 ### Minor Changes
 
-  ### New Features 🚀
+### New Features 🚀
 
-  - **Enhanced Hook Functionality**: The `useHighlightPopover` hook now exposes `setCurrentSelection`, allowing for more flexible control over the selected text.
-  - **Improved Performance**: Implemented `requestAnimationFrame()` for handling text selection, resulting in smoother updates and better overall performance.
+- **Enhanced Hook Functionality**: The `useHighlightPopover` hook now exposes `setCurrentSelection`, allowing for more flexible control over the selected text.
+- **Improved Performance**: Implemented `requestAnimationFrame()` for handling text selection, resulting in smoother updates and better overall performance.
 
-  ### Improvements 🛠️
+### Improvements 🛠️
 
-  - **Better Documentation**: Added JSDoc comments throughout the codebase, improving developer experience with better type hints and function descriptions.
-  - **Accessibility Enhancements**: Added ARIA attributes to improve screen reader compatibility and overall accessibility.
-  - **Optimized Rendering**: Memoized the popover style object to reduce unnecessary re-renders and improve performance.
+- **Better Documentation**: Added JSDoc comments throughout the codebase, improving developer experience with better type hints and function descriptions.
+- **Accessibility Enhancements**: Added ARIA attributes to improve screen reader compatibility and overall accessibility.
+- **Optimized Rendering**: Memoized the popover style object to reduce unnecessary re-renders and improve performance.
 
-  ### Under The Hood 🔧
+### Under The Hood 🔧
 
-  - Various code optimizations and refactoring for better maintainability and performance.
+- Various code optimizations and refactoring for better maintainability and performance.
 
-  ## Upgrade Instructions
+## Upgrade Instructions
 
-  To upgrade to v1.1.0, run:
+To upgrade to v1.1.0, run:
 
-  ```bash
-  npm install @omsimos/react-highlight-popover@latest
-  ```
+```bash
+npm install @omsimos/react-highlight-popover@latest
+```
 
 ## 1.0.0
 
