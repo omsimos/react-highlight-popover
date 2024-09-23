@@ -1,5 +1,21 @@
 # @omsimos/react-highlight-popover
 
+## 1.3.1
+
+### Patch Changes
+
+- ### Fixes 🛠
+
+  - **Removed Unintended `.mjs` File**: An unnecessary file was unintentionally included in the v1.3.0 build. This patch removes the file, ensuring a cleaner build and reducing the package size.
+
+  ## Upgrade Instructions
+
+  To upgrade to v1.3.1, run:
+
+  ```bash
+  npm install @omsimos/react-highlight-popover@latest
+  ```
+
 ## 1.3.0
 
 ### Minor Changes
