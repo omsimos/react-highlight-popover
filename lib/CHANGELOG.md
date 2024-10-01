@@ -1,10 +1,28 @@
 # @omsimos/react-highlight-popover
 
+## 1.3.2
+
+### Patch Changes
+
+- ### Bug Fixes 🐞
+
+  - **Removed Redundant Click-Outside Logic**:
+    - The `useEffect` that handled clicks outside the popover has been removed. This was causing issues where clicking outside on elements with `user-select: none` would unintentionally close the popover, even though the text remained highlighted.
+    - Since clicking outside naturally removes text selection, the previous logic was redundant and caused bugs by closing the popover prematurely.
+
+  ***
+
+  To upgrade to v1.3.2, run:
+
+  ```bash
+  npm install @omsimos/react-highlight-popover@latest
+  ```
+
 ## 1.3.1
 
 ### Patch Changes
 
-- ### Fixes 🛠
+- ### Bug Fixes 🐞
 
   - **Removed Unintended `.mjs` File**: An unnecessary file was unintentionally included in the v1.3.0 build. This patch removes the file, ensuring a cleaner build and reducing the package size.
 
