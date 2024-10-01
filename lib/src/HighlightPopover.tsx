@@ -230,24 +230,6 @@ export const HighlightPopover = memo(function HighlightPopover({
     };
   }, [handleSelection]);
 
-  // Handle clicks outside the popover
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        setShowPopover(false);
-        onPopoverHide?.();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [onPopoverHide]);
-
   const contextValue = useMemo<HighlightPopoverContextType>(
     () => ({
       showPopover,

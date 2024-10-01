@@ -83,56 +83,6 @@ describe("HighlightPopover Component", () => {
     });
   });
 
-  test("hides popover when clicking outside", async () => {
-    const renderPopoverMock = mock(() => (
-      <div data-testid="popover-hide">Popover Content</div>
-    ));
-    const onPopoverHideMock = mock();
-
-    render(
-      <HighlightPopover
-        renderPopover={renderPopoverMock}
-        onPopoverHide={onPopoverHideMock}
-      >
-        <p data-testid="selectable-text-hide">Select this text</p>
-      </HighlightPopover>,
-    );
-
-    const textElement = screen.getByTestId("selectable-text-hide");
-
-    await act(async () => {
-      const range = document.createRange();
-      range.selectNodeContents(textElement);
-      const selection = window.getSelection();
-      if (selection) {
-        selection.removeAllRanges();
-        selection.addRange(range);
-      }
-
-      const event = new Event("selectionchange", {
-        bubbles: true,
-        cancelable: true,
-      });
-      document.dispatchEvent(event);
-    });
-
-    // Wait for the popover to appear
-    await waitFor(() => {
-      expect(screen.getByTestId("popover-hide")).toBeDefined();
-    });
-
-    // Click outside
-    await act(async () => {
-      fireEvent.mouseDown(document.body);
-    });
-
-    // Wait for the popover to disappear
-    await waitFor(() => {
-      expect(onPopoverHideMock).toHaveBeenCalled();
-      expect(screen.queryByTestId("popover-hide")).toBeNull();
-    });
-  });
-
   test("applies offset to popover position", async () => {
     const renderPopoverMock = mock(({ position }) => (
       <div
