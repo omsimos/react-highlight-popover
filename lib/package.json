@@ -36,8 +36,8 @@
   },
   "homepage": "https://react-highlight-popover.omsimos.com",
   "peerDependencies": {
-    "react": "^17.0.0 || ^18.0.0",
-    "react-dom": "^17.0.0 || ^18.0.0"
+    "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
+    "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "type": "module",
   "sideEffects": false
