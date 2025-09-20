@@ -189,7 +189,12 @@ export const HighlightPopover = memo(function HighlightPopover({
         break;
     }
 
-    setPopoverPosition({ top, left });
+    setPopoverPosition((prevPosition) => {
+      if (prevPosition.top === top && prevPosition.left === left) {
+        return prevPosition;
+      }
+      return { top, left };
+    });
   }, [offset, alignment]);
 
   /**
@@ -208,7 +213,9 @@ export const HighlightPopover = memo(function HighlightPopover({
       selectionRangeRef.current = range;
 
       updatePopoverPosition();
-      setCurrentSelection(selectionText);
+      setCurrentSelection((prev) =>
+        prev === selectionText ? prev : selectionText,
+      );
 
       if (!showPopoverRef.current) {
         setShowPopover(true);
@@ -220,7 +227,7 @@ export const HighlightPopover = memo(function HighlightPopover({
         setShowPopover(false);
       }
 
-      setCurrentSelection("");
+      setCurrentSelection((prev) => (prev === "" ? prev : ""));
     }
   }, [
     isSelectionWithinContainer,
