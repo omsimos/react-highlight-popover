@@ -4,7 +4,6 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "declaration": true,
-    "declarationMap": true,
     "esModuleInterop": true,
     "incremental": false,
     "isolatedModules": true,
