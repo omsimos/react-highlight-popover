@@ -24,7 +24,6 @@
     "tests"
   ],
   "dependencies": {
-    "@changesets/cli": "^2.27.8",
-    "shiki": "^3.13.0"
+    "@changesets/cli": "^2.27.8"
   }
 }
