@@ -14,7 +14,7 @@ export default function Home() {
           Documentation
         </Link>
 
-        <div className="text-zinc-800 bg-zinc-50/50 rounded-lg shadow-sm border px-4 py-3 ">
+        <div className="text-zinc-800 bg-zinc-50/50 rounded-lg shadow-xs border px-4 py-3 ">
           <p>
             npm install{" "}
             <span className="font-semibold">
