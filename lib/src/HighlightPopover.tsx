@@ -9,6 +9,19 @@ import React, {
   createContext,
 } from "react";
 
+const hasSameBoundaryPoints = (current: Range, next: Range) => {
+  if (typeof Range === "undefined") return false;
+
+  try {
+    return (
+      current.compareBoundaryPoints(Range.START_TO_START, next) === 0 &&
+      current.compareBoundaryPoints(Range.END_TO_END, next) === 0
+    );
+  } catch {
+    return false;
+  }
+};
+
 /**
  * Represents the position of the popover.
  */
@@ -202,7 +215,10 @@ export const HighlightPopover = memo(function HighlightPopover({
    * Handles the text selection and popover positioning.
    */
   const handleSelection = useCallback(() => {
-    const selection = window.getSelection();
+    if (!containerRef.current) return;
+
+    const ownerDocument = containerRef.current.ownerDocument ?? document;
+    const selection = ownerDocument.getSelection();
     const selectionText = selection?.toString().trim() ?? "";
     const isValidSelection =
       selection &&
@@ -211,6 +227,17 @@ export const HighlightPopover = memo(function HighlightPopover({
 
     if (isValidSelection) {
       const range = selection!.getRangeAt(0);
+      const previousRange = selectionRangeRef.current;
+      const isDuplicateSelection =
+        previousRange &&
+        hasSameBoundaryPoints(previousRange, range) &&
+        previousSelectionRef.current === selectionText &&
+        showPopoverRef.current;
+
+      if (isDuplicateSelection) {
+        return;
+      }
+
       selectionRangeRef.current = range;
 
       updatePopoverPosition();
