@@ -1,11 +1,25 @@
 # @omsimos/react-highlight-popover
 
+## 1.4.0
+
+### Minor Changes
+
+- ### Performance Improvements 🚀
+  - Reduced unnecessary renders by skipping popover position and selection updates when nothing changed.
+  - Added a safeguarded `requestAnimationFrame` throttle so multiple `selectionchange` events collapse into a single render and any pending frame is cancelled on unmount.
+
+- ### Lifecycle Reliability ✅
+  - Ensured selection lifecycle callbacks only fire on real visibility transitions and always emit `onPopoverHide` during teardown.
+  - Prevented duplicate processing when range boundary points remain unchanged, keeping drag interactions smooth.
+
+- ### Compatibility 🔁
+  - Expanded peer dependency support to include React 19 while keeping full compatibility with React 17 and 18.
+
 ## 1.3.2
 
 ### Patch Changes
 
 - ### Bug Fixes 🐞
-
   - **Removed Redundant Click-Outside Logic**:
     - The `useEffect` that handled clicks outside the popover has been removed. This was causing issues where clicking outside on elements with `user-select: none` would unintentionally close the popover, even though the text remained highlighted.
     - Since clicking outside naturally removes text selection, the previous logic was redundant and caused bugs by closing the popover prematurely.
@@ -23,7 +37,6 @@
 ### Patch Changes
 
 - ### Bug Fixes 🐞
-
   - **Removed Unintended `.mjs` File**: An unnecessary file was unintentionally included in the v1.3.0 build. This patch removes the file, ensuring a cleaner build and reducing the package size.
 
   ## Upgrade Instructions
@@ -39,14 +52,12 @@
 ### Minor Changes
 
 - ### Performance Improvements 🚀
-
   - **Memoized Components**: Both the main `HighlightPopover` component and the new `PopoverContent` component are now memoized using `React.memo()`, significantly reducing unnecessary re-renders.
   - **Optimized Event Handling**: The `selectionchange` event listener now uses `requestAnimationFrame` to batch updates, reducing the frequency of calculations and improving overall performance.
   - **Reduced State Updates**: The `handleSelection` function now checks conditions before updating state, minimizing unnecessary renders.
   - **Memoized Context Value**: The `contextValue` is now memoized to prevent unnecessary re-renders of context consumers.
 
   ### Documentation 📚
-
   - **Updated Basic Example**: The basic usage example in the documentation now demonstrates the use of the `useHighlightPopover` hook, providing a more comprehensive illustration of the component's capabilities.
 
   ## Upgrade Instructions
@@ -62,15 +73,12 @@
 ### Minor Changes
 
 - ### New Features 🚀
-
   - **Alignment Prop for Popover**: Introduced a new `alignment` prop that allows for positioning the popover relative to the selected text. Supported values: `'left'`, `'center'`, `'right'`. The default is set to `'center'`.
 
   ### Bug Fixes 🐞
-
   - **Resolved ARIA Typo**: Fixed a typo in the ARIA attribute to improve accessibility.
 
   ### Under The Hood 🔧
-
   - **ESM-Only Package**: The package has been converted to ESM-only, improving compatibility with modern JavaScript environments.
   - **Minified Package Output**: Reduced the bundle size by minifying the package output, leading to better performance and faster load times.
 
@@ -118,7 +126,6 @@ npm install @omsimos/react-highlight-popover@latest
   We're excited to announce the initial release of React Highlight Popover, a customizable, headless React component for creating popovers on text selection, with zero dependencies!
 
   ## 🎉 Highlights
-
   - **Headless Component**: Maximum flexibility for styling and integration
   - **Zero Dependencies**: Only React as a peer dependency
   - **Customizable**: Fine-tune behavior with props and callbacks
@@ -126,7 +133,6 @@ npm install @omsimos/react-highlight-popover@latest
   - **TypeScript Support**: Full type definitions included
 
   ## 🚀 Features
-
   - Easy-to-use React component
   - Fully customizable popover content and styling
   - Configurable minimum selection length
@@ -171,7 +177,6 @@ npm install @omsimos/react-highlight-popover@latest
   ## 📝 Changelog
 
   ### v1.0.0
-
   - Initial release of React Highlight Popover
   - Implemented core HighlightPopover component
   - Added useHighlightPopover hook for accessing internal state

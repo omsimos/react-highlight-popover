@@ -9,6 +9,19 @@ import React, {
   createContext,
 } from "react";
 
+const hasSameBoundaryPoints = (current: Range, next: Range) => {
+  if (typeof Range === "undefined") return false;
+
+  try {
+    return (
+      current.compareBoundaryPoints(Range.START_TO_START, next) === 0 &&
+      current.compareBoundaryPoints(Range.END_TO_END, next) === 0
+    );
+  } catch {
+    return false;
+  }
+};
+
 /**
  * Represents the position of the popover.
  */
@@ -136,6 +149,14 @@ export const HighlightPopover = memo(function HighlightPopover({
   const [currentSelection, setCurrentSelection] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const selectionRangeRef = useRef<Range | null>(null);
+  const pendingFrameRef = useRef<number | null>(null);
+  const showPopoverRef = useRef(showPopover);
+  const previousShowRef = useRef(showPopover);
+  const previousSelectionRef = useRef("");
+
+  useEffect(() => {
+    showPopoverRef.current = showPopover;
+  }, [showPopover]);
 
   /**
    * Checks if the current selection is within the HighlightPopover container.
@@ -182,51 +203,85 @@ export const HighlightPopover = memo(function HighlightPopover({
         break;
     }
 
-    setPopoverPosition({ top, left });
+    setPopoverPosition((prevPosition) => {
+      if (prevPosition.top === top && prevPosition.left === left) {
+        return prevPosition;
+      }
+      return { top, left };
+    });
   }, [offset, alignment]);
 
   /**
    * Handles the text selection and popover positioning.
    */
   const handleSelection = useCallback(() => {
-    const selection = window.getSelection();
-    if (
+    if (!containerRef.current) return;
+
+    const ownerDocument = containerRef.current.ownerDocument ?? document;
+    const selection = ownerDocument.getSelection();
+    const selectionText = selection?.toString().trim() ?? "";
+    const isValidSelection =
       selection &&
-      selection.toString().trim().length >= minSelectionLength &&
-      isSelectionWithinContainer(selection)
-    ) {
-      onSelectionStart?.();
-      const range = selection.getRangeAt(0);
+      selectionText.length >= minSelectionLength &&
+      isSelectionWithinContainer(selection);
+
+    if (isValidSelection) {
+      const range = selection!.getRangeAt(0);
+      const previousRange = selectionRangeRef.current;
+      const isDuplicateSelection =
+        previousRange &&
+        hasSameBoundaryPoints(previousRange, range) &&
+        previousSelectionRef.current === selectionText &&
+        showPopoverRef.current;
+
+      if (isDuplicateSelection) {
+        return;
+      }
+
       selectionRangeRef.current = range;
 
       updatePopoverPosition();
-      setCurrentSelection(selection.toString());
-      setShowPopover(true);
-      onPopoverShow?.();
-      onSelectionEnd?.(selection.toString());
+      setCurrentSelection((prev) =>
+        prev === selectionText ? prev : selectionText,
+      );
+
+      if (!showPopoverRef.current) {
+        setShowPopover(true);
+      }
     } else {
-      setShowPopover(false);
-      onPopoverHide?.();
+      selectionRangeRef.current = null;
+
+      if (showPopoverRef.current) {
+        setShowPopover(false);
+      }
+
+      setCurrentSelection((prev) => (prev === "" ? prev : ""));
     }
   }, [
     isSelectionWithinContainer,
     minSelectionLength,
-    onSelectionStart,
-    onSelectionEnd,
-    onPopoverShow,
-    onPopoverHide,
     updatePopoverPosition,
   ]);
 
   // Add event listener for selection changes
   useEffect(() => {
     const handleSelectionChange = () => {
-      requestAnimationFrame(handleSelection);
+      if (pendingFrameRef.current !== null) return;
+
+      pendingFrameRef.current = requestAnimationFrame(() => {
+        pendingFrameRef.current = null;
+        handleSelection();
+      });
     };
 
     document.addEventListener("selectionchange", handleSelectionChange);
     return () => {
       document.removeEventListener("selectionchange", handleSelectionChange);
+
+      if (pendingFrameRef.current !== null) {
+        cancelAnimationFrame(pendingFrameRef.current);
+        pendingFrameRef.current = null;
+      }
     };
   }, [handleSelection]);
 
@@ -240,6 +295,45 @@ export const HighlightPopover = memo(function HighlightPopover({
     }),
     [showPopover, popoverPosition, currentSelection],
   );
+
+  useEffect(() => {
+    const wasShowing = previousShowRef.current;
+
+    if (showPopover) {
+      if (!wasShowing) {
+        onSelectionStart?.();
+        onPopoverShow?.();
+      }
+
+      if (
+        currentSelection &&
+        currentSelection !== previousSelectionRef.current
+      ) {
+        onSelectionEnd?.(currentSelection);
+        previousSelectionRef.current = currentSelection;
+      }
+    } else if (wasShowing) {
+      onPopoverHide?.();
+      previousSelectionRef.current = "";
+    }
+
+    previousShowRef.current = showPopover;
+  }, [
+    currentSelection,
+    onPopoverHide,
+    onPopoverShow,
+    onSelectionEnd,
+    onSelectionStart,
+    showPopover,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      if (previousShowRef.current) {
+        onPopoverHide?.();
+      }
+    };
+  }, [onPopoverHide]);
 
   const popoverStyle = useMemo(
     () => ({

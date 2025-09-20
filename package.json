@@ -5,11 +5,12 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "clean": "rm -rf node_modules tests/node_modules && bun i"
   },
   "devDependencies": {
     "prettier": "^3.2.5",
-    "tsup": "^8.2.4",
+    "tsdown": "^0.15.3",
     "turbo": "^2.1.1",
     "typescript": "^5.4.5"
   },
