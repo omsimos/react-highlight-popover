@@ -136,6 +136,13 @@ export const HighlightPopover = memo(function HighlightPopover({
   const [currentSelection, setCurrentSelection] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const selectionRangeRef = useRef<Range | null>(null);
+  const showPopoverRef = useRef(showPopover);
+  const previousShowRef = useRef(showPopover);
+  const previousSelectionRef = useRef("");
+
+  useEffect(() => {
+    showPopoverRef.current = showPopover;
+  }, [showPopover]);
 
   /**
    * Checks if the current selection is within the HighlightPopover container.
@@ -190,31 +197,34 @@ export const HighlightPopover = memo(function HighlightPopover({
    */
   const handleSelection = useCallback(() => {
     const selection = window.getSelection();
-    if (
+    const selectionText = selection?.toString().trim() ?? "";
+    const isValidSelection =
       selection &&
-      selection.toString().trim().length >= minSelectionLength &&
-      isSelectionWithinContainer(selection)
-    ) {
-      onSelectionStart?.();
-      const range = selection.getRangeAt(0);
+      selectionText.length >= minSelectionLength &&
+      isSelectionWithinContainer(selection);
+
+    if (isValidSelection) {
+      const range = selection!.getRangeAt(0);
       selectionRangeRef.current = range;
 
       updatePopoverPosition();
-      setCurrentSelection(selection.toString());
-      setShowPopover(true);
-      onPopoverShow?.();
-      onSelectionEnd?.(selection.toString());
+      setCurrentSelection(selectionText);
+
+      if (!showPopoverRef.current) {
+        setShowPopover(true);
+      }
     } else {
-      setShowPopover(false);
-      onPopoverHide?.();
+      selectionRangeRef.current = null;
+
+      if (showPopoverRef.current) {
+        setShowPopover(false);
+      }
+
+      setCurrentSelection("");
     }
   }, [
     isSelectionWithinContainer,
     minSelectionLength,
-    onSelectionStart,
-    onSelectionEnd,
-    onPopoverShow,
-    onPopoverHide,
     updatePopoverPosition,
   ]);
 
@@ -240,6 +250,45 @@ export const HighlightPopover = memo(function HighlightPopover({
     }),
     [showPopover, popoverPosition, currentSelection],
   );
+
+  useEffect(() => {
+    const wasShowing = previousShowRef.current;
+
+    if (showPopover) {
+      if (!wasShowing) {
+        onSelectionStart?.();
+        onPopoverShow?.();
+      }
+
+      if (
+        currentSelection &&
+        currentSelection !== previousSelectionRef.current
+      ) {
+        onSelectionEnd?.(currentSelection);
+        previousSelectionRef.current = currentSelection;
+      }
+    } else if (wasShowing) {
+      onPopoverHide?.();
+      previousSelectionRef.current = "";
+    }
+
+    previousShowRef.current = showPopover;
+  }, [
+    currentSelection,
+    onPopoverHide,
+    onPopoverShow,
+    onSelectionEnd,
+    onSelectionStart,
+    showPopover,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      if (previousShowRef.current) {
+        onPopoverHide?.();
+      }
+    };
+  }, [onPopoverHide]);
 
   const popoverStyle = useMemo(
     () => ({
