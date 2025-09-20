@@ -4,9 +4,13 @@ import {
   screen,
   waitFor,
   act,
+  cleanup,
 } from "@testing-library/react";
-import { HighlightPopover } from "@omsimos/react-highlight-popover";
-import { describe, expect, test, mock, beforeEach } from "bun:test";
+import {
+  HighlightPopover,
+  useHighlightPopover,
+} from "@omsimos/react-highlight-popover";
+import { describe, expect, test, mock, beforeEach, afterEach } from "bun:test";
 
 describe("HighlightPopover Component", () => {
   beforeEach(() => {
@@ -26,7 +30,56 @@ describe("HighlightPopover Component", () => {
       };
       return DOMRect.fromRect(rect);
     });
+
+    Range.prototype.getBoundingClientRect = mock(() => {
+      const rect = {
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 50,
+        top: 0,
+        left: 0,
+        bottom: 50,
+        right: 100,
+        toJSON: () => rect,
+      };
+      return DOMRect.fromRect(rect);
+    });
   });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  const triggerSelection = async (element: HTMLElement) => {
+    await act(async () => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+
+      const event = new Event("selectionchange", {
+        bubbles: true,
+        cancelable: true,
+      });
+      document.dispatchEvent(event);
+    });
+  };
+
+  const clearSelection = async () => {
+    await act(async () => {
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      const event = new Event("selectionchange", {
+        bubbles: true,
+        cancelable: true,
+      });
+      document.dispatchEvent(event);
+    });
+  };
 
   test("renders children correctly", () => {
     const renderPopoverMock = mock(() => <div data-testid="popover" />);
@@ -60,21 +113,7 @@ describe("HighlightPopover Component", () => {
 
     const textElement = screen.getByTestId("selectable-text-show");
 
-    await act(async () => {
-      const range = document.createRange();
-      range.selectNodeContents(textElement);
-      const selection = window.getSelection();
-      if (selection) {
-        selection.removeAllRanges();
-        selection.addRange(range);
-      }
-
-      const event = new Event("selectionchange", {
-        bubbles: true,
-        cancelable: true,
-      });
-      document.dispatchEvent(event);
-    });
+    await triggerSelection(textElement);
 
     await waitFor(() => {
       expect(onSelectionStartMock).toHaveBeenCalled();
@@ -104,31 +143,21 @@ describe("HighlightPopover Component", () => {
 
     const textElement = screen.getByTestId("selectable-text-offset");
 
-    await act(async () => {
-      const range = document.createRange();
-      range.selectNodeContents(textElement);
-      const selection = window.getSelection();
-      if (selection) {
-        selection.removeAllRanges();
-        selection.addRange(range);
-      }
+    await triggerSelection(textElement);
 
-      const event = new Event("selectionchange", {
-        bubbles: true,
-        cancelable: true,
-      });
-      document.dispatchEvent(event);
-    });
-
-    // Wait for the popover to appear and check its position
     await waitFor(() => {
-      const popover = screen.getByTestId("popover-offset");
-      expect(popover).toBeDefined();
-      const style = window.getComputedStyle(popover);
-
-      expect(parseInt(style.top)).toBe(-20);
-      expect(parseInt(style.left)).toBe(10);
+      expect(renderPopoverMock).toHaveBeenCalled();
     });
+
+    const popover = screen.getByTestId("popover-offset");
+    expect(popover).toBeDefined();
+
+    const [firstCall] = renderPopoverMock.mock.calls;
+    const { position } = firstCall?.[0] as {
+      position: { top: number; left: number };
+    };
+    expect(position.top).toBe(30);
+    expect(position.left).toBe(60);
   });
 
   test("does not show popover for short selections", async () => {
@@ -145,22 +174,195 @@ describe("HighlightPopover Component", () => {
 
     const textElement = screen.getByTestId("selectable-text-short");
 
-    await act(async () => {
-      const range = document.createRange();
-      range.selectNodeContents(textElement);
-      const selection = window.getSelection();
-      if (selection) {
-        selection.removeAllRanges();
-        selection.addRange(range);
-      }
-
-      const event = new Event("selectionchange", {
-        bubbles: true,
-        cancelable: true,
-      });
-      document.dispatchEvent(event);
-    });
+    await triggerSelection(textElement);
 
     expect(screen.queryByTestId("popover-short")).toBeNull();
+  });
+
+  test("fires lifecycle callbacks once per show/hide cycle", async () => {
+    const renderPopoverMock = mock(() => (
+      <div data-testid="popover-lifecycle" />
+    ));
+    const onSelectionStartMock = mock();
+    const onSelectionEndMock = mock();
+    const onPopoverShowMock = mock();
+    const onPopoverHideMock = mock();
+
+    render(
+      <HighlightPopover
+        renderPopover={renderPopoverMock}
+        onSelectionStart={onSelectionStartMock}
+        onSelectionEnd={onSelectionEndMock}
+        onPopoverShow={onPopoverShowMock}
+        onPopoverHide={onPopoverHideMock}
+      >
+        <p data-testid="selectable-text-lifecycle">Lifecycle text</p>
+      </HighlightPopover>,
+    );
+
+    const textElement = screen.getByTestId("selectable-text-lifecycle");
+    await triggerSelection(textElement);
+
+    await waitFor(() => {
+      expect(onSelectionStartMock).toHaveBeenCalledTimes(1);
+      expect(onPopoverShowMock).toHaveBeenCalledTimes(1);
+      expect(onSelectionEndMock).toHaveBeenCalledWith("Lifecycle text");
+    });
+
+    await clearSelection();
+
+    await waitFor(() => {
+      expect(onPopoverHideMock).toHaveBeenCalledTimes(1);
+    });
+
+    expect(onSelectionStartMock).toHaveBeenCalledTimes(1);
+    expect(onSelectionEndMock).toHaveBeenCalledTimes(1);
+    expect(renderPopoverMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("applies left alignment style", async () => {
+    const renderPopoverMock = mock(
+      ({ position }: { position: { top: number; left: number } }) => (
+        <div data-testid="popover-left">{`${position.top},${position.left}`}</div>
+      ),
+    );
+
+    render(
+      <HighlightPopover
+        renderPopover={renderPopoverMock}
+        alignment="left"
+        offset={{ x: 15 }}
+      >
+        <p data-testid="selectable-text-left">Left alignment</p>
+      </HighlightPopover>,
+    );
+
+    const textElement = screen.getByTestId("selectable-text-left");
+    await triggerSelection(textElement);
+
+    const popover = await screen.findByRole("tooltip");
+    const style = popover.getAttribute("style") ?? "";
+    expect(style).toContain("left: 15px");
+    expect(style).not.toContain("transform: translateX(-50%)");
+
+    const [firstCall] = renderPopoverMock.mock.calls;
+    const { position } = firstCall?.[0] as {
+      position: { top: number; left: number };
+    };
+    expect(position.left).toBe(15);
+  });
+
+  test("applies right alignment style", async () => {
+    const renderPopoverMock = mock(
+      ({ position }: { position: { top: number; left: number } }) => (
+        <div data-testid="popover-right">{`${position.top},${position.left}`}</div>
+      ),
+    );
+
+    render(
+      <HighlightPopover renderPopover={renderPopoverMock} alignment="right">
+        <p data-testid="selectable-text-right">Right alignment</p>
+      </HighlightPopover>,
+    );
+
+    const textElement = screen.getByTestId("selectable-text-right");
+    await triggerSelection(textElement);
+
+    const popover = await screen.findByRole("tooltip");
+    const style = popover.getAttribute("style") ?? "";
+    expect(style).toContain("right: calc(100% - 100px)");
+
+    const [firstCall] = renderPopoverMock.mock.calls;
+    const { position } = firstCall?.[0] as {
+      position: { top: number; left: number };
+    };
+    expect(position.left).toBe(100);
+  });
+
+  test("ignores selection outside the container", async () => {
+    const renderPopoverMock = mock(() => <div data-testid="popover-outside" />);
+
+    render(
+      <>
+        <p data-testid="outside-text">Outside</p>
+        <HighlightPopover renderPopover={renderPopoverMock}>
+          <p data-testid="inside-text">Inside</p>
+        </HighlightPopover>
+      </>,
+    );
+
+    const outsideElement = screen.getByTestId("outside-text");
+    await triggerSelection(outsideElement);
+
+    await waitFor(() => {
+      expect(renderPopoverMock).not.toHaveBeenCalled();
+    });
+    expect(screen.queryByTestId("popover-outside")).toBeNull();
+  });
+
+  test("calls onPopoverHide when unmounted while visible", async () => {
+    const onPopoverHideMock = mock();
+
+    const { unmount } = render(
+      <HighlightPopover
+        renderPopover={() => <div data-testid="popover-unmount" />}
+        onPopoverHide={onPopoverHideMock}
+      >
+        <p data-testid="selectable-text-unmount">Unmount text</p>
+      </HighlightPopover>,
+    );
+
+    const textElement = screen.getByTestId("selectable-text-unmount");
+    await triggerSelection(textElement);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("popover-unmount")).toBeDefined();
+    });
+
+    unmount();
+
+    expect(onPopoverHideMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("useHighlightPopover throws outside provider", () => {
+    function Consumer() {
+      useHighlightPopover();
+      return null;
+    }
+
+    expect(() => render(<Consumer />)).toThrowError(
+      "useHighlightPopover must be used within a HighlightPopover",
+    );
+  });
+
+  test("useHighlightPopover exposes context inside provider", async () => {
+    function Consumer() {
+      const { showPopover, setShowPopover } = useHighlightPopover();
+      return (
+        <button
+          data-testid="hook-toggle"
+          onClick={() => setShowPopover((prev) => !prev)}
+        >
+          {showPopover ? "shown" : "hidden"}
+        </button>
+      );
+    }
+
+    render(
+      <HighlightPopover renderPopover={() => <div />}>
+        <Consumer />
+      </HighlightPopover>,
+    );
+
+    const toggle = screen.getByTestId("hook-toggle");
+    expect(toggle.textContent).toBe("hidden");
+
+    await act(async () => {
+      fireEvent.click(toggle);
+    });
+
+    await waitFor(() => {
+      expect(toggle.textContent).toBe("shown");
+    });
   });
 });
