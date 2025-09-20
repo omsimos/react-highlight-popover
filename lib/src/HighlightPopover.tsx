@@ -136,6 +136,7 @@ export const HighlightPopover = memo(function HighlightPopover({
   const [currentSelection, setCurrentSelection] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const selectionRangeRef = useRef<Range | null>(null);
+  const pendingFrameRef = useRef<number | null>(null);
   const showPopoverRef = useRef(showPopover);
   const previousShowRef = useRef(showPopover);
   const previousSelectionRef = useRef("");
@@ -238,12 +239,22 @@ export const HighlightPopover = memo(function HighlightPopover({
   // Add event listener for selection changes
   useEffect(() => {
     const handleSelectionChange = () => {
-      requestAnimationFrame(handleSelection);
+      if (pendingFrameRef.current !== null) return;
+
+      pendingFrameRef.current = requestAnimationFrame(() => {
+        pendingFrameRef.current = null;
+        handleSelection();
+      });
     };
 
     document.addEventListener("selectionchange", handleSelectionChange);
     return () => {
       document.removeEventListener("selectionchange", handleSelectionChange);
+
+      if (pendingFrameRef.current !== null) {
+        cancelAnimationFrame(pendingFrameRef.current);
+        pendingFrameRef.current = null;
+      }
     };
   }, [handleSelection]);
 
