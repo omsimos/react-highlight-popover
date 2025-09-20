@@ -1,5 +1,13 @@
 # @omsimos/react-highlight-popover
 
+## 1.4.1
+
+### Patch Changes
+
+- ### Packaging 🔧
+  - Disabled source map emission during the build and removed declaration maps, trimming the published package to the essentials (`index.js` and `index.d.ts`).
+  - Result: npm package size is now closer to previous releases while keeping typings intact.
+
 ## 1.4.0
 
 ### Minor Changes
