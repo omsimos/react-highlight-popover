@@ -1,0 +1,87 @@
+---
+title: Introduction
+description: A headless React component for showing popovers on text selection, with zero dependencies.
+---
+
+`HighlightPopover` watches for text selections inside its children and renders your popover next to the selected text. It handles selection tracking, positioning, and dismissal. You decide what the popover looks like.
+
+<BasicDemo />
+
+## Installation
+
+```npm
+npm i @omsimos/react-highlight-popover
+```
+
+Requires React 18 or 19. The component is marked with `"use client"`, so you can render it directly from a Next.js Server Component.
+
+## Usage
+
+Wrap the content people can select, and return your popover from `renderPopover`:
+
+```tsx
+import { HighlightPopover } from "@omsimos/react-highlight-popover";
+
+export function Article() {
+  return (
+    <HighlightPopover
+      offset={{ y: 8 }}
+      renderPopover={({ selection }) => (
+        <div className="rounded-sm border bg-white p-2 shadow-lg">
+          You selected: {selection}
+        </div>
+      )}
+    >
+      <p>
+        This is a sample text. Try selecting some words to see the popover in
+        action.
+      </p>
+    </HighlightPopover>
+  );
+}
+```
+
+To read the selection or close the popover from inside it, use the `useHighlightPopover` hook:
+
+```tsx
+import {
+  HighlightPopover,
+  useHighlightPopover,
+} from "@omsimos/react-highlight-popover";
+
+function Popover() {
+  const { currentSelection, setShowPopover } = useHighlightPopover();
+
+  return (
+    <div className="rounded-md border bg-white p-2 shadow-lg">
+      <p>You selected: {currentSelection}</p>
+      <button onClick={() => setShowPopover(false)}>Close</button>
+    </div>
+  );
+}
+
+export function Article() {
+  return (
+    <HighlightPopover renderPopover={() => <Popover />} offset={{ y: 8 }}>
+      <p>Select some text in this paragraph.</p>
+    </HighlightPopover>
+  );
+}
+```
+
+## Next steps
+
+<Cards>
+  <Card title="Positioning" href="/docs/positioning">
+    Placement, alignment, offsets, collisions, and portals.
+  </Card>
+  <Card title="Interaction" href="/docs/interaction">
+    When the popover shows, and how it's dismissed.
+  </Card>
+  <Card title="Examples" href="/docs/examples">
+    A selection toolbar, persistent highlights, and arrows.
+  </Card>
+  <Card title="API Reference" href="/docs/api">
+    Every prop, render prop, and hook value.
+  </Card>
+</Cards>

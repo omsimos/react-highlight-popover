@@ -1,0 +1,172 @@
+---
+title: API Reference
+description: Props, render props, and the useHighlightPopover hook.
+---
+
+## HighlightPopover
+
+<TypeTable
+  type={{
+    children: {
+      type: "ReactNode",
+      description: "The content where text selection triggers the popover.",
+      required: true,
+    },
+    renderPopover: {
+      type: "(props: PopoverRenderProps) => ReactNode",
+      description: "Renders the popover content.",
+      required: true,
+    },
+    className: {
+      type: "string",
+      description: "Class name for the wrapper element.",
+    },
+    offset: {
+      type: "{ x?: number; y?: number }",
+      description: "`x` moves the popover right, `y` moves it away from the selection.",
+      default: "{ x: 0, y: 0 }",
+    },
+    zIndex: {
+      type: "number",
+      description: "The z-index of the popover.",
+      default: "40",
+    },
+    alignment: {
+      type: '"left" | "center" | "right"',
+      description: "Horizontal alignment relative to the selected text.",
+      default: '"center"',
+    },
+    placement: {
+      type: '"top" | "bottom"',
+      description: "Side of the selected text to place the popover on.",
+      default: '"bottom"',
+    },
+    avoidCollisions: {
+      type: "boolean",
+      description: "Flip and shift the popover to keep it inside the viewport.",
+      default: "true",
+    },
+    collisionPadding: {
+      type: "number",
+      description: "Minimum distance in pixels from the viewport edges.",
+      default: "8",
+    },
+    portal: {
+      type: "boolean | HTMLElement",
+      description: "Render the popover in a portal. `true` uses `document.body`.",
+      default: "false",
+    },
+    minSelectionLength: {
+      type: "number",
+      description: "Minimum length of the selected text, ignoring surrounding whitespace.",
+      default: "1",
+    },
+    showWhileSelecting: {
+      type: "boolean",
+      description: "Show the popover while the pointer is still dragging.",
+      default: "false",
+    },
+    closeOnEscape: {
+      type: "boolean",
+      description: "Hide the popover when Escape is pressed.",
+      default: "true",
+    },
+    popoverProps: {
+      type: "HTMLAttributes<HTMLDivElement>",
+      description: "Props spread onto the popover element, such as `role`, `aria-*`, or `className`.",
+    },
+    onSelectionStart: {
+      type: "() => void",
+      description: "Fires when a selection begins inside the wrapper.",
+    },
+    onSelectionEnd: {
+      type: "(selection: string) => void",
+      description: "Fires when a selection is completed.",
+    },
+    onPopoverShow: {
+      type: "() => void",
+      description: "Fires when the popover is shown.",
+    },
+    onPopoverHide: {
+      type: "() => void",
+      description: "Fires when the popover is hidden, including on unmount.",
+    },
+  }}
+/>
+
+## renderPopover
+
+`renderPopover` receives `PopoverRenderProps`:
+
+<TypeTable
+  type={{
+    selection: {
+      type: "string",
+      description: "The selected text.",
+    },
+    position: {
+      type: "{ top: number; left: number }",
+      description: "Position of the popover's top-left corner, relative to the wrapper, or to the viewport when portalled.",
+    },
+    placement: {
+      type: '"top" | "bottom"',
+      description: "Resolved placement, after flipping.",
+    },
+    range: {
+      type: "Range | null",
+      description: "A snapshot of the selected range, for example to call `getClientRects()`.",
+    },
+  }}
+/>
+
+## useHighlightPopover
+
+Returns the state of the nearest `HighlightPopover`. Throws when used outside one.
+
+<TypeTable
+  type={{
+    showPopover: {
+      type: "boolean",
+      description: "Whether the popover is visible.",
+    },
+    setShowPopover: {
+      type: "(show: boolean | ((prev: boolean) => boolean)) => void",
+      description: "Shows or hides the popover. Hiding it dismisses the current selection until it changes.",
+    },
+    currentSelection: {
+      type: "string",
+      description: "The selected text.",
+    },
+    setCurrentSelection: {
+      type: "Dispatch<SetStateAction<string>>",
+      description: "Overrides the selected text.",
+    },
+    selectionRange: {
+      type: "Range | null",
+      description: "A snapshot of the selected range.",
+    },
+    popoverPosition: {
+      type: "{ top: number; left: number }",
+      description: "Position of the popover's top-left corner.",
+    },
+    placement: {
+      type: '"top" | "bottom"',
+      description: "Resolved placement of the popover.",
+    },
+  }}
+/>
+
+## Types
+
+All types are exported:
+
+```ts
+import type {
+  HighlightPopoverProps,
+  HighlightPopoverContextValue,
+  PopoverRenderProps,
+  PopoverPosition,
+  PopoverAlignment,
+  PopoverPlacement,
+} from "@omsimos/react-highlight-popover";
+```

@@ -1,0 +1,89 @@
+---
+title: Examples
+description: Patterns built with HighlightPopover.
+---
+
+## Selection toolbar
+
+A toolbar with real actions. **Highlight** passes the selected `range` to the [CSS Custom Highlight API](https://developer.mozilla.org/docs/Web/API/CSS_Custom_Highlight_API), so highlights persist without changing the page content.
+
+<ToolbarDemo />
+
+```tsx
+function Toolbar() {
+  const { currentSelection, selectionRange, setShowPopover } =
+    useHighlightPopover();
+
+  const highlight = () => {
+    if (!selectionRange) return;
+    const registry = CSS.highlights.get("marker") ?? new Highlight();
+    registry.add(selectionRange.cloneRange());
+    CSS.highlights.set("marker", registry);
+    setShowPopover(false);
+  };
+
+  return (
+    <div role="toolbar" className="flex gap-1 rounded-full bg-black p-1 text-white">
+      <button onClick={highlight}>Highlight</button>
+      <button onClick={() => navigator.clipboard.writeText(currentSelection)}>
+        Copy
+      </button>
+    </div>
+  );
+}
+```
+
+```css
+::highlight(marker) {
+  background-color: yellow;
+}
+```
+
+## Arrow
+
+Use the `data-placement` attribute to point an arrow at the selection. With Tailwind CSS, add a `group` class through `popoverProps`:
+
+<ArrowDemo />
+
+```tsx
+<HighlightPopover
+  offset={{ y: 10 }}
+  popoverProps={{ className: "group" }}
+  renderPopover={({ selection }) => (
+    <div className="relative rounded-lg bg-black px-3 py-2 text-white">
+      <span className="absolute left-1/2 size-2.5 -translate-x-1/2 rotate-45 bg-black group-data-[placement=bottom]:-top-1 group-data-[placement=top]:-bottom-1" />
+      {selection}
+    </div>
+  )}
+>
+  {children}
+</HighlightPopover>
+```
+
+## Entrance animation
+
+The popover mounts when it's shown, so `@starting-style` animates it in without JavaScript. Scale it from the side that faces the selection:
+
+```css
+.popover {
+  transform-origin: top center;
+  transition:
+    opacity 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+[data-placement="top"] > .popover {
+  transform-origin: bottom center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popover {
+    transition: opacity 120ms ease;
+  }
+}
+```

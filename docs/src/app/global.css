@@ -1,50 +1,97 @@
 @import "tailwindcss";
-@plugin "@tailwindcss/typography";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
 
 @theme {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+
+  --color-marker: var(--marker);
+  --color-marker-ink: var(--marker-ink);
+
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-/*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
+:root {
+  --marker: oklch(0.92 0.16 99);
+  --marker-ink: oklch(0.24 0.02 90);
+}
 
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
+.dark {
+  --marker: oklch(0.8 0.15 78 / 0.5);
+  --marker-ink: oklch(0.97 0.01 95);
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}
+
+::selection {
+  background-color: var(--marker);
+  color: var(--marker-ink);
+}
+
+/* Persistent highlights made with the CSS Custom Highlight API. */
+::highlight(rhp-marker) {
+  background-color: var(--marker);
+  color: var(--marker-ink);
+}
+
+/* Popover entrance. Origin follows the side the popover opens on. */
+.popover-enter {
+  transform-origin: top center;
+  transition:
+    opacity 160ms var(--ease-out-strong),
+    transform 160ms var(--ease-out-strong);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
   }
 }
 
-@utility text-balance {
-  text-wrap: balance;
+[data-placement="top"] > .popover-enter {
+  transform-origin: bottom center;
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
 }
 
-@layer utilities {
-  :root {
-    --background: #ffffff;
-    --foreground: #242424;
+/* The highlighter swipe behind the hero word. */
+.marker-swipe {
+  background-image: linear-gradient(var(--marker), var(--marker));
+  background-repeat: no-repeat;
+  background-position: 0 72%;
+  background-size: 100% 0.36em;
+  animation: marker-swipe 700ms var(--ease-out-strong) 250ms both;
+}
+
+@keyframes marker-swipe {
+  from {
+    background-size: 0% 0.36em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popover-enter,
+  [data-placement="top"] > .popover-enter {
+    transition: opacity 120ms ease;
+
+    @starting-style {
+      opacity: 0;
+      transform: none;
+    }
   }
 
-  body {
-    color: var(--foreground);
-    background: var(--background);
-  }
-
-  pre {
-    overflow-x: auto;
-    padding: 1rem 0;
-  }
-
-  pre [data-line] {
-    padding: 0 1rem;
+  .marker-swipe {
+    animation: none;
   }
 }

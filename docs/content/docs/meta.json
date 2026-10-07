@@ -1,0 +1,14 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "---Guides---",
+    "positioning",
+    "interaction",
+    "accessibility",
+    "examples",
+    "---Reference---",
+    "api",
+    "migration"
+  ]
+}
