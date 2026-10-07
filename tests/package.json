@@ -2,18 +2,21 @@
   "name": "tests",
   "private": true,
   "version": "1.0.0",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
-    "react": "19.1.1",
-    "react-dom": "19.1.1"
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
+    "@happy-dom/global-registrator": "^20.14.5",
     "@omsimos/react-highlight-popover": "*",
-    "@types/react": "^19.1.13",
-    "@types/react-dom": "^19.1.9",
-    "@happy-dom/global-registrator": "^18.0.1",
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/react": "^16.0.1",
-    "@types/bun": "latest"
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@types/bun": "latest",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0"
   },
   "type": "module"
 }

@@ -9,28 +9,69 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
+        uses: actions/checkout@v7
 
-      - uses: actions/cache@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      # Reads the version from packageManager in package.json
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.bun/install/cache
-            ${{ github.workspace }}/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/bun.lock') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+            ${{ github.workspace }}/docs/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/bun.lock') }}-${{ hashFiles('docs/**/*.ts', 'docs/**/*.tsx', 'docs/**/*.mdx') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/bun.lock') }}-
 
-      - uses: oven-sh/setup-bun@v2
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build projects
+        run: bun run build
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Run tests
+        run: bun test
+
+      - name: Lint package
+        working-directory: lib
+        run: bunx publint
+
+  react-18:
+    name: Test with React 18
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
         with:
-          bun-version: latest
+          node-version: 24
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Pin React 18
+        run: |
+          jq '.overrides = {
+            "react": "^18.3.1",
+            "react-dom": "^18.3.1",
+            "@types/react": "^18.3.0",
+            "@types/react-dom": "^18.3.0"
+          }' package.json > package.tmp.json
+          mv package.tmp.json package.json
 
       - name: Install dependencies
         run: bun install
 
-      - name: Build projects
-        run: bun run build
+      - name: Build library
+        run: bunx turbo build --filter=@omsimos/react-highlight-popover
 
       - name: Run tests
         run: bun test

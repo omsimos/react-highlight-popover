@@ -16,7 +16,8 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2022",
-    "outDir": "dist"
+    "outDir": "dist",
+    "isolatedDeclarations": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
