@@ -4,26 +4,26 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
-    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo build --filter=@omsimos/react-highlight-popover && bun test",
+    "version-packages": "changeset version && bun install --lockfile-only",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "clean": "rm -rf node_modules tests/node_modules && bun i"
+    "clean": "rm -rf node_modules docs/node_modules lib/node_modules tests/node_modules && bun i"
   },
   "devDependencies": {
-    "prettier": "^3.2.5",
-    "tsdown": "^0.15.3",
-    "turbo": "^2.1.1",
-    "typescript": "^5.4.5"
+    "@changesets/cli": "^3.0.3",
+    "prettier": "^3.9.9",
+    "tsdown": "^0.23.0",
+    "turbo": "^2.11.7",
+    "typescript": "^7.0.2"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.18"
   },
-  "packageManager": "bun@1.1.27",
+  "packageManager": "bun@1.4.2",
   "workspaces": [
     "docs",
     "lib",
     "tests"
-  ],
-  "dependencies": {
-    "@changesets/cli": "^2.27.8"
-  }
+  ]
 }
