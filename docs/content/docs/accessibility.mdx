@@ -1,0 +1,34 @@
+---
+title: Accessibility
+description: Roles, keyboard support, and screen readers.
+---
+
+## Roles and labels
+
+The popover is headless and doesn't set a `role`, since the right one depends on what you render. Use `popoverProps` to add one:
+
+```tsx
+<HighlightPopover
+  renderPopover={renderPopover}
+  popoverProps={{ role: "toolbar", "aria-label": "Text actions" }}
+>
+  {children}
+</HighlightPopover>
+```
+
+| Content | Suggested role |
+| --- | --- |
+| A row of buttons | `toolbar` |
+| A form or several controls | `dialog`, with `aria-label` |
+| Text only, nothing interactive | `tooltip` |
+
+## Keyboard
+
+- Selections made with the keyboard, such as <kbd>Shift</kbd> and the arrow keys, show the popover.
+- <kbd>Escape</kbd> hides the popover.
+
+The popover doesn't move focus. If your popover needs keyboard access to its controls, add a way to reach them, such as a keyboard shortcut that focuses the first button.
+
+## Motion
+
+The component doesn't animate. If you add an entrance animation to your popover, respect `prefers-reduced-motion`.

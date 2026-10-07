@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import NextTopLoader from "nextjs-toploader";
+import { RootProvider } from "fumadocs-ui/provider/next";
 import localFont from "next/font/local";
-import "./globals.css";
+import { Instrument_Serif } from "next/font/google";
+import { siteUrl } from "@/lib/shared";
+import "./global.css";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -9,16 +11,38 @@ const geistSans = localFont({
   weight: "100 900",
 });
 
+const geistMono = localFont({
+  src: "./fonts/GeistMonoVF.woff",
+  variable: "--font-geist-mono",
+  weight: "100 900",
+});
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-instrument-serif",
+});
+
+const description =
+  "A headless React component for showing popovers on text selection, with zero dependencies.";
+
 export const viewport: Viewport = {
   width: "device-width",
-  themeColor: "#ffffff",
   initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
 };
 
 export const metadata: Metadata = {
-  title: "React Highlight Popover",
-  description:
-    "A customizable, headless React component for creating popovers on text selection, with zero dependencies.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "React Highlight Popover",
+    template: "%s – React Highlight Popover",
+  },
+  description,
   keywords: [
     "React",
     "highlight",
@@ -30,17 +54,15 @@ export const metadata: Metadata = {
   creator: "Josh Daniel Bañares",
   openGraph: {
     type: "website",
-    url: "https://react-highlight-popover.omsimos.com",
+    url: siteUrl,
     title: "React Highlight Popover",
-    description:
-      "Create customizable popovers on text selection with this zero-dependency React component.",
+    description,
     siteName: "React Highlight Popover",
   },
   twitter: {
     card: "summary_large_image",
     title: "React Highlight Popover",
-    description:
-      "Create customizable popovers on text selection with this zero-dependency React component.",
+    description,
   },
   robots: {
     index: true,
@@ -55,21 +77,20 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://react-highlight-popover.omsimos.com",
+    canonical: "/",
   },
   category: "Technology",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.className} antialiased`}>
-        <NextTopLoader showSpinner={false} />
-        {children}
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="flex min-h-screen flex-col antialiased">
+        <RootProvider>{children}</RootProvider>
       </body>
     </html>
   );

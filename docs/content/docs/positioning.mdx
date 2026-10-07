@@ -1,0 +1,54 @@
+---
+title: Positioning
+description: Placement, alignment, offsets, collision handling, and portals.
+---
+
+<Playground />
+
+## Placement and alignment
+
+The popover is placed below the selection by default. Use `placement="top"` to place it above. Use `alignment` to line it up with the left edge, center, or right edge of the selection.
+
+```tsx
+<HighlightPopover placement="top" alignment="left" renderPopover={renderPopover}>
+  {children}
+</HighlightPopover>
+```
+
+## Offset
+
+`offset.y` is the gap between the selection and the popover. `offset.x` moves the popover to the right.
+
+```tsx
+<HighlightPopover offset={{ x: 0, y: 8 }} renderPopover={renderPopover}>
+  {children}
+</HighlightPopover>
+```
+
+<Callout title="Prefer offset over margins">
+  Margins on your popover content stay on the same side when the popover flips. Use `offset` so the gap is always between the selection and the popover.
+</Callout>
+
+## Collision handling
+
+When the popover doesn't fit in the viewport, it flips to the other side of the selection and shifts horizontally to stay on screen. Set `collisionPadding` to change the minimum distance from the viewport edges, or `avoidCollisions={false}` to turn this off.
+
+The popover element has a `data-placement` attribute with the resolved placement. `renderPopover` and `useHighlightPopover` also return it as `placement`. See the [arrow example](/docs/examples#arrow).
+
+## Following the selection
+
+The popover follows the selection when the page scrolls, the window resizes, the content reflows, or the popover's own size changes.
+
+## Portals
+
+The popover is rendered inside the wrapper element. If an ancestor has `overflow: hidden`, render the popover in a portal so it can't be clipped:
+
+<PortalDemo />
+
+```tsx
+<HighlightPopover portal renderPopover={renderPopover}>
+  {children}
+</HighlightPopover>
+```
+
+`portal` also accepts an element to render into. Portalled popovers use `position: fixed`, so the target element shouldn't have a `transform`.

@@ -1,0 +1,45 @@
+---
+title: Interaction
+description: When the popover appears, and how it's dismissed.
+---
+
+## Showing the popover
+
+When selecting with a mouse or pen, the popover appears once the pointer is released. Set `showWhileSelecting` to show and update it during the drag instead.
+
+<ReleaseDemo />
+
+Selections made with the keyboard show the popover immediately. `minSelectionLength` sets the minimum number of characters, ignoring surrounding whitespace.
+
+## Interacting with the popover
+
+Clicking inside the popover keeps it open, so buttons work even when the click clears the selection. Selecting text inside the popover doesn't move it.
+
+## Dismissing the popover
+
+The popover hides when the selection is cleared or moves outside the wrapper.
+
+Pressing Escape also hides it. It stays hidden until the selection changes. Set `closeOnEscape={false}` to turn this off.
+
+## Controlling the popover
+
+`setShowPopover` from `useHighlightPopover` shows or hides the popover. Hiding it dismisses the current selection, the same way Escape does.
+
+```tsx
+function Popover() {
+  const { setShowPopover } = useHighlightPopover();
+
+  return <button onClick={() => setShowPopover(false)}>Done</button>;
+}
+```
+
+## Callbacks
+
+| Callback | Fires when |
+| --- | --- |
+| `onSelectionStart` | A selection begins inside the wrapper |
+| `onSelectionEnd` | A selection is completed, with the selected text |
+| `onPopoverShow` | The popover is shown |
+| `onPopoverHide` | The popover is hidden, including on unmount |
+
+Callbacks can be inline functions. The latest version is always called, and changing them doesn't trigger extra callbacks.
