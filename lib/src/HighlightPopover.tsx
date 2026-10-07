@@ -1,4 +1,4 @@
-import React, {
+import {
   memo,
   useRef,
   useMemo,
@@ -7,25 +7,23 @@ import React, {
   useContext,
   useCallback,
   createContext,
+  useLayoutEffect,
 } from "react";
-
-const hasSameBoundaryPoints = (current: Range, next: Range) => {
-  if (typeof Range === "undefined") return false;
-
-  try {
-    return (
-      current.compareBoundaryPoints(Range.START_TO_START, next) === 0 &&
-      current.compareBoundaryPoints(Range.END_TO_END, next) === 0
-    );
-  } catch {
-    return false;
-  }
-};
+import type {
+  ReactNode,
+  CSSProperties,
+  HTMLAttributes,
+  SetStateAction,
+  Dispatch,
+  NamedExoticComponent,
+} from "react";
+import { createPortal, flushSync } from "react-dom";
 
 /**
- * Represents the position of the popover.
+ * Position of the popover's top-left corner in pixels. Relative to the
+ * wrapper element, or to the viewport when the popover is portalled.
  */
-interface Position {
+export interface PopoverPosition {
   /** The top position of the popover in pixels. */
   top: number;
   /** The left position of the popover in pixels. */
@@ -33,34 +31,73 @@ interface Position {
 }
 
 /**
- * Defines the possible alignment options for the popover.
+ * Horizontal alignment of the popover relative to the selected text.
  */
-type PopoverAlignment = "left" | "center" | "right";
+export type PopoverAlignment = "left" | "center" | "right";
+
+/**
+ * Side of the selected text the popover is placed on.
+ */
+export type PopoverPlacement = "top" | "bottom";
+
+/**
+ * Props passed to `renderPopover`.
+ */
+export interface PopoverRenderProps {
+  /** Resolved position of the popover. */
+  position: PopoverPosition;
+  /** Resolved placement, which may differ from the requested one after flipping. */
+  placement: PopoverPlacement;
+  /** The selected text. */
+  selection: string;
+  /** A snapshot of the selected range. */
+  range: Range | null;
+}
 
 /**
  * Props for the HighlightPopover component.
  */
-interface HighlightPopoverProps {
+export interface HighlightPopoverProps {
   /** The content where text selection will trigger the popover. */
-  children: React.ReactNode;
-  /** Function to render the popover component. */
-  renderPopover: (props: {
-    position: Position;
-    selection: string;
-  }) => React.ReactNode;
+  children: ReactNode;
+  /** Function to render the popover content. */
+  renderPopover: (props: PopoverRenderProps) => ReactNode;
   /** Additional CSS class for the wrapper element. */
   className?: string;
-  /** Offset for adjusting popover position. */
+  /**
+   * Offset in pixels. `x` moves the popover right, `y` moves it away from
+   * the selection.
+   */
   offset?: { x?: number; y?: number };
   /** The z-index of the popover. */
   zIndex?: number;
-  /** Alignment of the popover relative to the selected text. */
+  /** Horizontal alignment of the popover relative to the selected text. */
   alignment?: PopoverAlignment;
+  /** Side of the selected text to place the popover on. */
+  placement?: PopoverPlacement;
+  /** Flip and shift the popover to keep it inside the viewport. */
+  avoidCollisions?: boolean;
+  /** Minimum distance in pixels from the viewport edges when avoiding collisions. */
+  collisionPadding?: number;
+  /**
+   * Render the popover in a portal so ancestors with `overflow: hidden`
+   * can't clip it. `true` portals into `document.body`.
+   */
+  portal?: boolean | HTMLElement;
   /** Minimum length of text selection to trigger the popover. */
   minSelectionLength?: number;
-  /** Callback fired when text selection starts. */
+  /**
+   * Show and update the popover while the pointer is still dragging. By
+   * default the popover waits until the pointer is released.
+   */
+  showWhileSelecting?: boolean;
+  /** Hide the popover when the Escape key is pressed. */
+  closeOnEscape?: boolean;
+  /** Props spread onto the popover element, e.g. `role`, `aria-*` or `className`. */
+  popoverProps?: HTMLAttributes<HTMLDivElement>;
+  /** Callback fired when a selection begins inside the wrapper. */
   onSelectionStart?: () => void;
-  /** Callback fired when text selection ends. */
+  /** Callback fired when a selection is completed, with the selected text. */
   onSelectionEnd?: (selection: string) => void;
   /** Callback fired when the popover is shown. */
   onPopoverShow?: () => void;
@@ -69,30 +106,72 @@ interface HighlightPopoverProps {
 }
 
 /**
- * Context type for the HighlightPopover.
+ * Value returned by `useHighlightPopover`.
  */
-interface HighlightPopoverContextType {
+export interface HighlightPopoverContextValue {
   /** Indicates whether the popover is currently visible. */
   showPopover: boolean;
-  /** Function to manually control popover visibility. */
-  setShowPopover: React.Dispatch<React.SetStateAction<boolean>>;
+  /**
+   * Function to manually control popover visibility. Hiding the popover
+   * dismisses the current selection until it changes.
+   */
+  setShowPopover: (show: SetStateAction<boolean>) => void;
   /** Current position of the popover. */
-  popoverPosition: Position;
+  popoverPosition: PopoverPosition;
+  /** Resolved placement of the popover. */
+  placement: PopoverPlacement;
   /** Currently selected text. */
   currentSelection: string;
   /** Function to manually set the current selection. */
-  setCurrentSelection: React.Dispatch<React.SetStateAction<string>>;
+  setCurrentSelection: Dispatch<SetStateAction<string>>;
+  /** A snapshot of the selected range. */
+  selectionRange: Range | null;
 }
 
+interface Layout extends PopoverPosition {
+  placement: PopoverPlacement;
+}
+
+const useIsomorphicLayoutEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+function useLatest<T>(value: T) {
+  const ref = useRef(value);
+  useIsomorphicLayoutEffect(() => {
+    ref.current = value;
+  });
+  return ref;
+}
+
+const isSameRange = (a: Range, b: Range) => {
+  try {
+    return (
+      a.compareBoundaryPoints(Range.START_TO_START, b) === 0 &&
+      a.compareBoundaryPoints(Range.END_TO_END, b) === 0
+    );
+  } catch {
+    // Ranges in different documents or roots can't be compared.
+    return false;
+  }
+};
+
+const isSelectionWithin = (container: Node, selection: Selection) => {
+  for (let i = 0; i < selection.rangeCount; i++) {
+    const range = selection.getRangeAt(i);
+    if (!container.contains(range.commonAncestorContainer)) return false;
+  }
+  return true;
+};
+
 const HighlightPopoverContext =
-  createContext<HighlightPopoverContextType | null>(null);
+  createContext<HighlightPopoverContextValue | null>(null);
 
 /**
  * Hook to access the HighlightPopover context.
  * @returns The HighlightPopover context value.
  * @throws Error if used outside of a HighlightPopover component.
  */
-export function useHighlightPopover() {
+export function useHighlightPopover(): HighlightPopoverContextValue {
   const context = useContext(HighlightPopoverContext);
   if (!context) {
     throw new Error(
@@ -103,273 +182,417 @@ export function useHighlightPopover() {
 }
 
 /**
- * Memoized component for rendering the popover content.
- */
-const PopoverContent = memo(
-  ({
-    renderPopover,
-    position,
-    selection,
-    style,
-  }: {
-    renderPopover: HighlightPopoverProps["renderPopover"];
-    position: Position;
-    selection: string;
-    style: React.CSSProperties;
-  }) => (
-    <div style={style} role="tooltip" aria-live="polite">
-      {renderPopover({ position, selection })}
-    </div>
-  ),
-);
-
-PopoverContent.displayName = "PopoverContent";
-
-/**
  * HighlightPopover component for creating popovers on text selection within a container.
  */
-export const HighlightPopover = memo(function HighlightPopover({
-  children,
-  renderPopover,
-  className = "",
-  offset = { x: 0, y: 0 },
-  zIndex = 40,
-  alignment = "center",
-  minSelectionLength = 1,
-  onSelectionStart,
-  onSelectionEnd,
-  onPopoverShow,
-  onPopoverHide,
-}: HighlightPopoverProps) {
-  const [showPopover, setShowPopover] = useState(false);
-  const [popoverPosition, setPopoverPosition] = useState<Position>({
-    top: 0,
-    left: 0,
-  });
-  const [currentSelection, setCurrentSelection] = useState("");
-  const containerRef = useRef<HTMLDivElement>(null);
-  const selectionRangeRef = useRef<Range | null>(null);
-  const pendingFrameRef = useRef<number | null>(null);
-  const showPopoverRef = useRef(showPopover);
-  const previousShowRef = useRef(showPopover);
-  const previousSelectionRef = useRef("");
+export const HighlightPopover: NamedExoticComponent<HighlightPopoverProps> =
+  memo(function HighlightPopover({
+    children,
+    renderPopover,
+    className,
+    offset,
+    zIndex = 40,
+    alignment = "center",
+    placement = "bottom",
+    avoidCollisions = true,
+    collisionPadding = 8,
+    portal = false,
+    minSelectionLength = 1,
+    showWhileSelecting = false,
+    closeOnEscape = true,
+    popoverProps,
+    onSelectionStart,
+    onSelectionEnd,
+    onPopoverShow,
+    onPopoverHide,
+  }: HighlightPopoverProps) {
+    const offsetX = offset?.x ?? 0;
+    const offsetY = offset?.y ?? 0;
+    const isPortalled = portal !== false;
 
-  useEffect(() => {
-    showPopoverRef.current = showPopover;
-  }, [showPopover]);
-
-  /**
-   * Checks if the current selection is within the HighlightPopover container.
-   * @param selection - The current selection object.
-   * @returns True if the selection is within the container, false otherwise.
-   */
-  const isSelectionWithinContainer = useCallback((selection: Selection) => {
-    if (!containerRef.current) return false;
-    const container = containerRef.current;
-    return Array.from({ length: selection.rangeCount }).every((_, i) => {
-      const range = selection.getRangeAt(i);
-      return (
-        container.contains(range.commonAncestorContainer) &&
-        container.contains(range.startContainer) &&
-        container.contains(range.endContainer)
-      );
+    const [showPopover, setShowPopoverState] = useState(false);
+    const [currentSelection, setCurrentSelection] = useState("");
+    const [selectionRange, setSelectionRange] = useState<Range | null>(null);
+    const [layout, setLayout] = useState<Layout>({
+      top: 0,
+      left: 0,
+      placement,
     });
-  }, []);
 
-  /**
-   * Updates the popover position based on the current selection and alignment.
-   */
-  const updatePopoverPosition = useCallback(() => {
-    if (!containerRef.current || !selectionRangeRef.current) return;
+    const containerRef = useRef<HTMLDivElement>(null);
+    const popoverRef = useRef<HTMLDivElement>(null);
+    const showRef = useRef(false);
+    const rangeRef = useRef<Range | null>(null);
+    const dismissedRangeRef = useRef<Range | null>(null);
+    const selectingRef = useRef(false);
+    const reportedSelectionRef = useRef("");
+    const pointerDownRef = useRef(false);
+    const pointerInPopoverRef = useRef(false);
+    const frameRef = useRef<number | null>(null);
+    const notifiedShowRef = useRef(false);
 
-    const range = selectionRangeRef.current;
-    const rect = range.getBoundingClientRect();
-    const containerRect = containerRef.current.getBoundingClientRect();
+    // Read through refs so listeners subscribe once and inline props are safe.
+    const callbacksRef = useLatest({
+      onSelectionStart,
+      onSelectionEnd,
+      onPopoverShow,
+      onPopoverHide,
+    });
+    const optionsRef = useLatest({
+      offsetX,
+      offsetY,
+      alignment,
+      placement,
+      isPortalled,
+      avoidCollisions,
+      collisionPadding,
+      minSelectionLength,
+      showWhileSelecting,
+    });
 
-    const top = rect.bottom - containerRect.top - (offset.y ?? 0);
-    let left: number;
+    const applyShow = useCallback((show: boolean) => {
+      if (showRef.current === show) return;
+      showRef.current = show;
+      setShowPopoverState(show);
+    }, []);
 
-    switch (alignment) {
-      case "left":
-        left = rect.left - containerRect.left + (offset.x ?? 0);
-        break;
-      case "right":
-        left = rect.right - containerRect.left - (offset.x ?? 0);
-        break;
-      case "center":
-      default:
-        left =
-          rect.left - containerRect.left + rect.width / 2 + (offset.x ?? 0);
-        break;
-    }
+    const setShowPopover = useCallback(
+      (value: SetStateAction<boolean>) => {
+        const show =
+          typeof value === "function" ? value(showRef.current) : value;
+        dismissedRangeRef.current = show ? null : rangeRef.current;
+        if (!show) reportedSelectionRef.current = "";
+        applyShow(show);
+      },
+      [applyShow],
+    );
 
-    setPopoverPosition((prevPosition) => {
-      if (prevPosition.top === top && prevPosition.left === left) {
-        return prevPosition;
+    const resetSelection = useCallback(() => {
+      selectingRef.current = false;
+      dismissedRangeRef.current = null;
+      reportedSelectionRef.current = "";
+      if (rangeRef.current) {
+        rangeRef.current = null;
+        setSelectionRange(null);
       }
-      return { top, left };
-    });
-  }, [offset, alignment]);
+      setCurrentSelection((prev) => (prev === "" ? prev : ""));
+      applyShow(false);
+    }, [applyShow]);
 
-  /**
-   * Handles the text selection and popover positioning.
-   */
-  const handleSelection = useCallback(() => {
-    if (!containerRef.current) return;
+    const evaluateSelection = useCallback(() => {
+      const container = containerRef.current;
+      if (!container) return;
 
-    const ownerDocument = containerRef.current.ownerDocument ?? document;
-    const selection = ownerDocument.getSelection();
-    const selectionText = selection?.toString().trim() ?? "";
-    const isValidSelection =
-      selection &&
-      selectionText.length >= minSelectionLength &&
-      isSelectionWithinContainer(selection);
+      // Leave the popover alone while it is being interacted with.
+      if (pointerDownRef.current && pointerInPopoverRef.current) return;
 
-    if (isValidSelection) {
-      const range = selection!.getRangeAt(0);
-      const previousRange = selectionRangeRef.current;
-      const isDuplicateSelection =
-        previousRange &&
-        hasSameBoundaryPoints(previousRange, range) &&
-        previousSelectionRef.current === selectionText &&
-        showPopoverRef.current;
-
-      if (isDuplicateSelection) {
+      const selection = container.ownerDocument.getSelection();
+      const popover = popoverRef.current;
+      if (
+        popover &&
+        selection &&
+        (popover.contains(selection.anchorNode) ||
+          popover.contains(selection.focusNode))
+      ) {
         return;
       }
 
-      selectionRangeRef.current = range;
+      const options = optionsRef.current;
+      const text = selection?.toString().trim() ?? "";
+      if (
+        !selection ||
+        selection.rangeCount === 0 ||
+        text.length < options.minSelectionLength ||
+        !isSelectionWithin(container, selection)
+      ) {
+        resetSelection();
+        return;
+      }
 
-      updatePopoverPosition();
-      setCurrentSelection((prev) =>
-        prev === selectionText ? prev : selectionText,
+      if (!selectingRef.current) {
+        selectingRef.current = true;
+        callbacksRef.current.onSelectionStart?.();
+      }
+
+      if (pointerDownRef.current && !options.showWhileSelecting) return;
+
+      const range = selection.getRangeAt(0);
+      if (dismissedRangeRef.current) {
+        if (isSameRange(dismissedRangeRef.current, range)) return;
+        dismissedRangeRef.current = null;
+      }
+      if (
+        showRef.current &&
+        rangeRef.current &&
+        isSameRange(rangeRef.current, range)
+      ) {
+        return;
+      }
+
+      // Browsers may mutate the live range, so keep a snapshot.
+      const snapshot = range.cloneRange();
+      rangeRef.current = snapshot;
+      setSelectionRange(snapshot);
+      setCurrentSelection(text);
+      applyShow(true);
+
+      if (reportedSelectionRef.current !== text) {
+        reportedSelectionRef.current = text;
+        callbacksRef.current.onSelectionEnd?.(text);
+      }
+    }, [applyShow, callbacksRef, optionsRef, resetSelection]);
+
+    const updatePosition = useCallback(() => {
+      const container = containerRef.current;
+      const popover = popoverRef.current;
+      const range = rangeRef.current;
+      if (!container || !popover || !range) return;
+
+      const {
+        offsetX: x,
+        offsetY: y,
+        alignment,
+        placement: preferred,
+        isPortalled,
+        avoidCollisions,
+        collisionPadding: padding,
+      } = optionsRef.current;
+      const viewport = container.ownerDocument.documentElement;
+      const anchor = range.getBoundingClientRect();
+      const width = popover.offsetWidth;
+      const height = popover.offsetHeight;
+
+      const below = anchor.bottom + y;
+      const above = anchor.top - y - height;
+      let resolved = preferred;
+
+      if (avoidCollisions) {
+        const fitsBelow = below + height <= viewport.clientHeight - padding;
+        const fitsAbove = above >= padding;
+        if (preferred === "bottom" && !fitsBelow && fitsAbove) {
+          resolved = "top";
+        } else if (preferred === "top" && !fitsAbove && fitsBelow) {
+          resolved = "bottom";
+        }
+      }
+
+      let top = resolved === "bottom" ? below : above;
+      let left =
+        alignment === "left"
+          ? anchor.left + x
+          : alignment === "right"
+            ? anchor.right - width + x
+            : anchor.left + anchor.width / 2 - width / 2 + x;
+
+      if (avoidCollisions) {
+        const maxLeft = viewport.clientWidth - width - padding;
+        left = Math.max(padding, Math.min(left, maxLeft));
+      }
+
+      if (!isPortalled) {
+        const rect = container.getBoundingClientRect();
+        top += container.scrollTop - rect.top - container.clientTop;
+        left += container.scrollLeft - rect.left - container.clientLeft;
+      }
+
+      setLayout((prev) =>
+        prev.top === top && prev.left === left && prev.placement === resolved
+          ? prev
+          : { top, left, placement: resolved },
+      );
+    }, [optionsRef]);
+
+    // Listen for selection and pointer changes for the component's lifetime.
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+      const doc = container.ownerDocument;
+      const win = doc.defaultView ?? window;
+
+      const schedule = () => {
+        if (frameRef.current !== null) return;
+        frameRef.current = win.requestAnimationFrame(() => {
+          frameRef.current = null;
+          evaluateSelection();
+        });
+      };
+      const onPointerDown = (event: PointerEvent) => {
+        if (event.button !== 0) return;
+        pointerDownRef.current = true;
+        pointerInPopoverRef.current =
+          popoverRef.current?.contains(event.target as Node) ?? false;
+      };
+      const onPointerUp = () => {
+        if (!pointerDownRef.current) return;
+        pointerDownRef.current = false;
+        pointerInPopoverRef.current = false;
+        schedule();
+      };
+
+      doc.addEventListener("selectionchange", schedule);
+      doc.addEventListener("pointerdown", onPointerDown, true);
+      doc.addEventListener("pointerup", onPointerUp, true);
+      doc.addEventListener("pointercancel", onPointerUp, true);
+      win.addEventListener("blur", onPointerUp);
+
+      return () => {
+        doc.removeEventListener("selectionchange", schedule);
+        doc.removeEventListener("pointerdown", onPointerDown, true);
+        doc.removeEventListener("pointerup", onPointerUp, true);
+        doc.removeEventListener("pointercancel", onPointerUp, true);
+        win.removeEventListener("blur", onPointerUp);
+        if (frameRef.current !== null) {
+          win.cancelAnimationFrame(frameRef.current);
+          frameRef.current = null;
+        }
+      };
+    }, [evaluateSelection]);
+
+    // Measure and position before paint whenever the inputs change.
+    useIsomorphicLayoutEffect(() => {
+      if (showPopover) updatePosition();
+    }, [
+      showPopover,
+      selectionRange,
+      currentSelection,
+      offsetX,
+      offsetY,
+      alignment,
+      placement,
+      isPortalled,
+      avoidCollisions,
+      collisionPadding,
+      updatePosition,
+    ]);
+
+    // Keep the popover attached on scroll, resize and reflow.
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!showPopover || !container) return;
+      const win = container.ownerDocument.defaultView ?? window;
+
+      const onChange = () => flushSync(updatePosition);
+      const observer =
+        typeof ResizeObserver === "undefined"
+          ? null
+          : new ResizeObserver(onChange);
+      observer?.observe(container);
+      if (popoverRef.current) observer?.observe(popoverRef.current);
+      win.addEventListener("scroll", onChange, {
+        capture: true,
+        passive: true,
+      });
+      win.addEventListener("resize", onChange, { passive: true });
+
+      return () => {
+        observer?.disconnect();
+        win.removeEventListener("scroll", onChange, { capture: true });
+        win.removeEventListener("resize", onChange);
+      };
+    }, [showPopover, updatePosition]);
+
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!showPopover || !closeOnEscape || !container) return;
+      const doc = container.ownerDocument;
+
+      const onKeyDown = (event: KeyboardEvent) => {
+        if (event.key === "Escape") setShowPopover(false);
+      };
+
+      doc.addEventListener("keydown", onKeyDown);
+      return () => doc.removeEventListener("keydown", onKeyDown);
+    }, [showPopover, closeOnEscape, setShowPopover]);
+
+    useEffect(() => {
+      if (notifiedShowRef.current === showPopover) return;
+      notifiedShowRef.current = showPopover;
+      if (showPopover) {
+        callbacksRef.current.onPopoverShow?.();
+      } else {
+        callbacksRef.current.onPopoverHide?.();
+      }
+    }, [showPopover, callbacksRef]);
+
+    useEffect(() => {
+      return () => {
+        if (notifiedShowRef.current) {
+          notifiedShowRef.current = false;
+          callbacksRef.current.onPopoverHide?.();
+        }
+      };
+    }, [callbacksRef]);
+
+    const popoverPosition = useMemo<PopoverPosition>(
+      () => ({ top: layout.top, left: layout.left }),
+      [layout.top, layout.left],
+    );
+
+    const contextValue = useMemo<HighlightPopoverContextValue>(
+      () => ({
+        showPopover,
+        setShowPopover,
+        popoverPosition,
+        placement: layout.placement,
+        currentSelection,
+        setCurrentSelection,
+        selectionRange,
+      }),
+      [
+        showPopover,
+        setShowPopover,
+        popoverPosition,
+        layout.placement,
+        currentSelection,
+        selectionRange,
+      ],
+    );
+
+    let popover: ReactNode = null;
+    if (showPopover) {
+      const style: CSSProperties = {
+        ...popoverProps?.style,
+        position: isPortalled ? "fixed" : "absolute",
+        top: layout.top,
+        left: layout.left,
+        width: "max-content",
+        zIndex,
+      };
+
+      popover = (
+        <div
+          {...popoverProps}
+          ref={popoverRef}
+          style={style}
+          data-placement={layout.placement}
+        >
+          {renderPopover({
+            position: popoverPosition,
+            placement: layout.placement,
+            selection: currentSelection,
+            range: selectionRange,
+          })}
+        </div>
       );
 
-      if (!showPopoverRef.current) {
-        setShowPopover(true);
+      if (isPortalled) {
+        const target =
+          portal === true
+            ? (containerRef.current?.ownerDocument ?? document).body
+            : portal;
+        popover = createPortal(popover, target);
       }
-    } else {
-      selectionRangeRef.current = null;
-
-      if (showPopoverRef.current) {
-        setShowPopover(false);
-      }
-
-      setCurrentSelection((prev) => (prev === "" ? prev : ""));
-    }
-  }, [
-    isSelectionWithinContainer,
-    minSelectionLength,
-    updatePopoverPosition,
-  ]);
-
-  // Add event listener for selection changes
-  useEffect(() => {
-    const handleSelectionChange = () => {
-      if (pendingFrameRef.current !== null) return;
-
-      pendingFrameRef.current = requestAnimationFrame(() => {
-        pendingFrameRef.current = null;
-        handleSelection();
-      });
-    };
-
-    document.addEventListener("selectionchange", handleSelectionChange);
-    return () => {
-      document.removeEventListener("selectionchange", handleSelectionChange);
-
-      if (pendingFrameRef.current !== null) {
-        cancelAnimationFrame(pendingFrameRef.current);
-        pendingFrameRef.current = null;
-      }
-    };
-  }, [handleSelection]);
-
-  const contextValue = useMemo<HighlightPopoverContextType>(
-    () => ({
-      showPopover,
-      setShowPopover,
-      popoverPosition,
-      currentSelection,
-      setCurrentSelection,
-    }),
-    [showPopover, popoverPosition, currentSelection],
-  );
-
-  useEffect(() => {
-    const wasShowing = previousShowRef.current;
-
-    if (showPopover) {
-      if (!wasShowing) {
-        onSelectionStart?.();
-        onPopoverShow?.();
-      }
-
-      if (
-        currentSelection &&
-        currentSelection !== previousSelectionRef.current
-      ) {
-        onSelectionEnd?.(currentSelection);
-        previousSelectionRef.current = currentSelection;
-      }
-    } else if (wasShowing) {
-      onPopoverHide?.();
-      previousSelectionRef.current = "";
     }
 
-    previousShowRef.current = showPopover;
-  }, [
-    currentSelection,
-    onPopoverHide,
-    onPopoverShow,
-    onSelectionEnd,
-    onSelectionStart,
-    showPopover,
-  ]);
-
-  useEffect(() => {
-    return () => {
-      if (previousShowRef.current) {
-        onPopoverHide?.();
-      }
-    };
-  }, [onPopoverHide]);
-
-  const popoverStyle = useMemo(
-    () => ({
-      zIndex,
-      width: "max-content",
-      position: "absolute" as const,
-      top: `${popoverPosition.top}px`,
-      ...(alignment === "left" && { left: `${popoverPosition.left}px` }),
-      ...(alignment === "center" && {
-        left: `${popoverPosition.left}px`,
-        transform: "translateX(-50%)",
-      }),
-      ...(alignment === "right" && {
-        right: `calc(100% - ${popoverPosition.left}px)`,
-      }),
-    }),
-    [zIndex, popoverPosition.top, popoverPosition.left, alignment],
-  );
-
-  return (
-    <HighlightPopoverContext.Provider value={contextValue}>
-      <div
-        ref={containerRef}
-        style={{ position: "relative" }}
-        className={className}
-      >
-        {children}
-        {showPopover && (
-          <PopoverContent
-            renderPopover={renderPopover}
-            position={popoverPosition}
-            selection={currentSelection}
-            style={popoverStyle}
-          />
-        )}
-      </div>
-    </HighlightPopoverContext.Provider>
-  );
-});
+    return (
+      <HighlightPopoverContext.Provider value={contextValue}>
+        <div
+          ref={containerRef}
+          style={{ position: "relative" }}
+          className={className}
+        >
+          {children}
+          {popover}
+        </div>
+      </HighlightPopoverContext.Provider>
+    );
+  });

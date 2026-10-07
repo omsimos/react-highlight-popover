@@ -17,6 +17,8 @@ Add the package using your package manager:
 npm i @omsimos/react-highlight-popover
 ```
 
+Requires React 18 or 19.
+
 ## Usage
 
 Here's a basic example of how to use the `HighlightPopover` component:
@@ -28,7 +30,7 @@ function Popover() {
   const { currentSelection, setShowPopover } = useHighlightPopover();
 
   return (
-    <div className="bg-white border rounded-md mt-2 p-2 shadow-lg select-none">
+    <div className="bg-white border rounded-md p-2 shadow-lg">
       <p>You selected: {currentSelection}</p>
       <button className="font-semibold" onClick={() => setShowPopover(false)}>
         Close
@@ -39,7 +41,7 @@ function Popover() {
 
 export function Example() {
   return (
-    <HighlightPopover renderPopover={() => <Popover />}>
+    <HighlightPopover renderPopover={() => <Popover />} offset={{ y: 8 }}>
       <p>
         This is a sample text. Try selecting some words to see the popover in action.
       </p>
@@ -47,5 +49,7 @@ export function Example() {
   );
 }
 ```
+
+Upgrading from v1? See the [migration guide](https://react-highlight-popover.omsimos.com/docs#migrating-from-v1).
 
 ### [API Reference](https://react-highlight-popover.omsimos.com/docs)
