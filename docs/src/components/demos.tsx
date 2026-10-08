@@ -163,8 +163,8 @@ export function ToolbarDemo() {
       <SelectionToolbar>
         <p>
           Select text to highlight it, copy it, or share it. Highlights use the
-          CSS Custom Highlight API with the selected <code>range</code>, so the
-          page content is never modified.
+          CSS Custom Highlight API with the selected <code>range</code>, so they
+          don&apos;t change the page&apos;s DOM.
         </p>
       </SelectionToolbar>
     </Preview>

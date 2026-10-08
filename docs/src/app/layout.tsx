@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     default: "React Highlight Popover",
-    template: "%s – React Highlight Popover",
+    template: "%s | React Highlight Popover",
   },
   description,
   keywords: [

@@ -163,15 +163,15 @@ export function Playground() {
           renderPopover={({ selection, placement }) => (
             <div className="popover-enter max-w-64 rounded-xl border bg-fd-popover p-3 text-fd-popover-foreground shadow-lg">
               <p className="font-mono text-[11px] tracking-wide text-fd-muted-foreground uppercase">
-                {placement} · {selection.length} chars
+                {placement} · {selection.length} characters
               </p>
-              <p className="mt-1 line-clamp-2 text-sm">“{selection}”</p>
+              <p className="mt-1 line-clamp-2 text-sm">"{selection}"</p>
             </div>
           )}
         >
           <p className="font-serif text-2xl leading-snug text-pretty sm:text-3xl">
             Typography is what language looks like. Select a few words here,
-            then change the options to see how the popover responds.
+            then change the options to see where the popover goes.
           </p>
         </HighlightPopover>
       </div>

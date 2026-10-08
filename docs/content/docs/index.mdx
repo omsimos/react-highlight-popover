@@ -1,9 +1,9 @@
 ---
 title: Introduction
-description: A headless React component for showing popovers on text selection, with zero dependencies.
+description: A headless React component that shows a popover when people select text.
 ---
 
-`HighlightPopover` watches for text selections inside its children and renders your popover next to the selected text. It handles selection tracking, positioning, and dismissal. You decide what the popover looks like.
+`HighlightPopover` watches for text selections inside its children and renders your popover next to the selected text. You write the popover's markup and styles. The component decides when to show it, where to place it, and when to hide it. It has no dependencies besides React.
 
 <BasicDemo />
 
@@ -13,7 +13,7 @@ description: A headless React component for showing popovers on text selection, 
 npm i @omsimos/react-highlight-popover
 ```
 
-Requires React 18 or 19. The component is marked with `"use client"`, so you can render it directly from a Next.js Server Component.
+Requires React 18 or 19. The build starts with a `"use client"` directive, so you can render the component directly from a Next.js Server Component.
 
 ## Usage
 
@@ -76,7 +76,7 @@ export function Article() {
     Placement, alignment, offsets, collisions, and portals.
   </Card>
   <Card title="Interaction" href="/docs/interaction">
-    When the popover shows, and how it's dismissed.
+    When the popover appears and what hides it.
   </Card>
   <Card title="Examples" href="/docs/examples">
     A selection toolbar, persistent highlights, and arrows.

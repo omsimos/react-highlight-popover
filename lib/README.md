@@ -1,6 +1,6 @@
-# Headless Highlight Popover for React
+# React Highlight Popover
 
-A lightweight and customizable React component for displaying popovers on text selection, with zero dependencies.
+A headless React component that shows a popover when people select text. It has no dependencies besides React.
 
 ![React Highlight Popover](https://github.com/user-attachments/assets/d9bff2f4-e7aa-4374-9273-d1f0a3c744bb)
 
@@ -11,8 +11,6 @@ A lightweight and customizable React component for displaying popovers on text s
 
 ## Installation
 
-Add the package using your package manager:
-
 ```sh
 npm i @omsimos/react-highlight-popover
 ```
@@ -21,7 +19,7 @@ Requires React 18 or 19.
 
 ## Usage
 
-Here's a basic example of how to use the `HighlightPopover` component:
+Wrap the content people can select, and return your popover from `renderPopover`. The `useHighlightPopover` hook reads the selection and closes the popover from inside it:
 
 ```jsx
 import { HighlightPopover, useHighlightPopover } from "@omsimos/react-highlight-popover";
@@ -50,6 +48,6 @@ export function Example() {
 }
 ```
 
-Upgrading from v1? See the [migration guide](https://react-highlight-popover.omsimos.com/docs#migrating-from-v1).
+To upgrade from v1, see the [migration guide](https://react-highlight-popover.omsimos.com/docs/migration).
 
-### [API Reference](https://react-highlight-popover.omsimos.com/docs)
+### [API reference](https://react-highlight-popover.omsimos.com/docs/api)

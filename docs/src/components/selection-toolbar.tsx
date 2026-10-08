@@ -141,7 +141,7 @@ function Toolbar() {
 
   const share = () => {
     const quote = currentSelection.slice(0, 200);
-    const text = `“${quote}${currentSelection.length > 200 ? "…" : ""}”`;
+    const text = `"${quote}${currentSelection.length > 200 ? "…" : ""}"`;
     const url = new URL("https://x.com/intent/post");
     url.searchParams.set("text", text);
     url.searchParams.set("url", siteUrl);

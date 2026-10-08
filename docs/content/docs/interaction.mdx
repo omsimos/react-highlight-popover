@@ -1,29 +1,29 @@
 ---
 title: Interaction
-description: When the popover appears, and how it's dismissed.
+description: When the popover appears and what hides it.
 ---
 
 ## Showing the popover
 
-When selecting with a mouse or pen, the popover appears once the pointer is released. Set `showWhileSelecting` to show and update it during the drag instead.
+When the user selects with a mouse or pen, the popover appears after they release it. Set `showWhileSelecting` to show and update the popover during the drag instead.
 
 <ReleaseDemo />
 
-Selections made with the keyboard show the popover immediately. `minSelectionLength` sets the minimum number of characters, ignoring surrounding whitespace.
+Keyboard selections show the popover immediately. `minSelectionLength` sets the minimum number of characters, not counting whitespace at either end.
 
 ## Interacting with the popover
 
-Clicking inside the popover keeps it open, so buttons work even when the click clears the selection. Selecting text inside the popover doesn't move it.
+Clicking inside the popover keeps it open, so its buttons work even when the click clears the selection. Selecting text inside the popover doesn't move it.
 
 ## Dismissing the popover
 
-The popover hides when the selection is cleared or moves outside the wrapper.
+The popover hides when the selection becomes empty or moves outside the wrapper.
 
-Pressing Escape also hides it. It stays hidden until the selection changes. Set `closeOnEscape={false}` to turn this off.
+Pressing Escape also hides it, until the selection changes. Set `closeOnEscape={false}` to turn this off.
 
 ## Controlling the popover
 
-`setShowPopover` from `useHighlightPopover` shows or hides the popover. Hiding it dismisses the current selection, the same way Escape does.
+`setShowPopover` from `useHighlightPopover` shows or hides the popover. Hiding it works like Escape, so the popover stays hidden until the selection changes.
 
 ```tsx
 function Popover() {
@@ -38,8 +38,8 @@ function Popover() {
 | Callback | Fires when |
 | --- | --- |
 | `onSelectionStart` | A selection begins inside the wrapper |
-| `onSelectionEnd` | A selection is completed, with the selected text |
-| `onPopoverShow` | The popover is shown |
+| `onSelectionEnd` | A selection is complete. Receives the selected text |
+| `onPopoverShow` | The popover appears |
 | `onPopoverHide` | The popover is hidden, including on unmount |
 
-Callbacks can be inline functions. The latest version is always called, and changing them doesn't trigger extra callbacks.
+Callbacks can be inline functions. The component always calls the latest version, and a new function on each render doesn't fire extra callbacks.

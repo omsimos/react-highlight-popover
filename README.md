@@ -1,6 +1,6 @@
 # @omsimos/react-highlight-popover
 
-A customizable, headless React component for creating popovers on text selection, with zero dependencies.
+A headless React component that shows a popover when people select text. It has no dependencies besides React.
 
 ![React Highlight Popover](https://github.com/user-attachments/assets/d9bff2f4-e7aa-4374-9273-d1f0a3c744bb)
 
@@ -12,31 +12,27 @@ A customizable, headless React component for creating popovers on text selection
 
 ## Features
 
-- 🎯 Easy-to-use React component with zero dependencies
-- 🧠 Headless component for maximum flexibility
-- 🎨 Fully customizable popover content and styling
-- 🎭 Smooth rendering with minimal re-renders
-- 🖱️ Shows the popover when the selection is complete
-- 📐 Placement, alignment, offset, and viewport collision handling
-- 🧭 Follows the selection on scroll, resize, and reflow
-- 🚪 Optional portal rendering to escape `overflow: hidden`
-- ⌨️ Escape to dismiss, and configurable ARIA attributes
-- 🔄 Event callbacks for selection and popover lifecycle
-- ⚛️ React 18 and 19, with `"use client"` for Server Components
+- You render the popover content. The component tracks the selection and positions the popover.
+- About 2.3 kB gzipped, with no dependencies besides React.
+- The popover appears after the user releases the mouse, not during the drag.
+- Placement above or below the selection, with alignment and offset props.
+- The popover flips and shifts to stay in the viewport, and follows the selection on scroll, resize, and reflow.
+- An optional portal, so ancestors with `overflow: hidden` can't clip the popover.
+- Escape hides the popover, and `popoverProps` sets its ARIA attributes.
+- Callbacks for when a selection starts and ends, and when the popover shows and hides.
+- Works with React 18 and 19, and with Server Components.
 
 ## Installation
-
-Add the package using your package manager:
 
 ```sh
 npm i @omsimos/react-highlight-popover
 ```
 
-Requires React 18 or 19. The component is marked with `"use client"`, so you can render it directly from a Next.js Server Component.
+Requires React 18 or 19. The build starts with a `"use client"` directive, so you can render the component directly from a Next.js Server Component.
 
 ## Usage
 
-Here's a basic example of how to use the `HighlightPopover` component:
+Wrap the content people can select, and return your popover from `renderPopover`:
 
 ```jsx
 import { HighlightPopover } from '@omsimos/react-highlight-popover';
@@ -62,15 +58,15 @@ export default App;
 
 ## Positioning
 
-The popover is placed below the selection by default. Use `placement="top"` to place it above, and `alignment` to line it up with the left edge, center, or right edge of the selection.
+The popover appears below the selection by default. Use `placement="top"` to place it above, and `alignment` to line it up with the left edge, center, or right edge of the selection.
 
-`offset.y` is the gap between the selection and the popover, and `offset.x` moves the popover to the right. Prefer `offset` over margins on your popover content, so the gap stays correct when the popover flips.
+`offset.y` is the gap between the selection and the popover, and `offset.x` moves the popover to the right. Use `offset` instead of margins on your popover content, so the gap stays on the correct side when the popover flips.
 
 When the popover doesn't fit in the viewport, it flips to the other side of the selection and shifts horizontally to stay on screen. Set `collisionPadding` to change the minimum distance from the viewport edges, or `avoidCollisions={false}` to turn this off.
 
 The popover follows the selection when the page scrolls, the window resizes, or the content reflows.
 
-If an ancestor has `overflow: hidden`, render the popover in a portal so it can't be clipped:
+If an ancestor has `overflow: hidden`, render the popover in a portal so the ancestor can't clip it:
 
 ```jsx
 <HighlightPopover renderPopover={renderPopover} portal>
@@ -78,21 +74,21 @@ If an ancestor has `overflow: hidden`, render the popover in a portal so it can'
 </HighlightPopover>
 ```
 
-`portal` also accepts an element to render into. Portalled popovers use `position: fixed`, so the target element shouldn't have a `transform`.
+`portal` also accepts an element to render into. A portalled popover uses `position: fixed`, so the target element shouldn't have a `transform`.
 
-The popover element has a `data-placement` attribute with the resolved placement, which you can use to style arrows.
+The popover element has a `data-placement` attribute with the placement after flipping. Use it to style arrows.
 
 ## Interaction
 
-When selecting with a mouse or pen, the popover appears once the pointer is released. Set `showWhileSelecting` to show and update it during the drag instead. Selections made with the keyboard show the popover immediately.
+When the user selects with a mouse or pen, the popover appears after they release it. Set `showWhileSelecting` to show and update the popover during the drag instead. Keyboard selections show the popover immediately.
 
-Clicking inside the popover keeps it open, so buttons work even if the click clears the selection. Selecting text inside the popover doesn't move it.
+Clicking inside the popover keeps it open, so its buttons work even if the click clears the selection. Selecting text inside the popover doesn't move it.
 
-Pressing Escape hides the popover. It stays hidden until the selection changes. Set `closeOnEscape={false}` to turn this off.
+Pressing Escape hides the popover until the selection changes. Set `closeOnEscape={false}` to turn this off.
 
 ## Accessibility
 
-The popover is headless and doesn't set a `role`, since the right one depends on what you render. Use `popoverProps` to add one:
+The popover doesn't set a `role`, because the right one depends on what you render. Use `popoverProps` to add one:
 
 ```jsx
 <HighlightPopover
@@ -107,55 +103,57 @@ Use `role: 'tooltip'` only for content that isn't interactive.
 
 ## API
 
-### `HighlightPopover` Props
+### `HighlightPopover` props
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `children` | `React.ReactNode` | (required) | The content where text selection will trigger the popover |
-| `renderPopover` | `(props: PopoverRenderProps) => React.ReactNode` | (required) | Function to render the popover content |
-| `className` | `string` | `undefined` | Additional CSS class for the wrapper element |
+| `children` | `React.ReactNode` | (required) | Content that people can select to show the popover |
+| `renderPopover` | `(props: PopoverRenderProps) => React.ReactNode` | (required) | Renders the popover content |
+| `className` | `string` | `undefined` | Class name for the wrapper element |
 | `offset` | `{ x?: number, y?: number }` | `{ x: 0, y: 0 }` | `x` moves the popover right, `y` moves it away from the selection |
 | `zIndex` | `number` | `40` | The z-index of the popover |
-| `alignment` | `'left'` \| `'center'` \| `'right'` | `'center'` | Horizontal alignment of the popover relative to the selected text |
+| `alignment` | `'left'` \| `'center'` \| `'right'` | `'center'` | Horizontal alignment relative to the selected text |
 | `placement` | `'top'` \| `'bottom'` | `'bottom'` | Side of the selected text to place the popover on |
 | `avoidCollisions` | `boolean` | `true` | Flip and shift the popover to keep it inside the viewport |
 | `collisionPadding` | `number` | `8` | Minimum distance in pixels from the viewport edges |
 | `portal` | `boolean` \| `HTMLElement` | `false` | Render the popover in a portal. `true` uses `document.body` |
-| `minSelectionLength` | `number` | `1` | Minimum length of text selection to trigger the popover |
+| `minSelectionLength` | `number` | `1` | Minimum length of the selected text |
 | `showWhileSelecting` | `boolean` | `false` | Show the popover while the pointer is still dragging |
-| `closeOnEscape` | `boolean` | `true` | Hide the popover when Escape is pressed |
-| `popoverProps` | `React.HTMLAttributes<HTMLDivElement>` | `undefined` | Props spread onto the popover element, e.g. `role`, `aria-*` or `className` |
-| `onSelectionStart` | `() => void` | `undefined` | Callback fired when a selection begins inside the wrapper |
-| `onSelectionEnd` | `(selection: string) => void` | `undefined` | Callback fired when a selection is completed |
-| `onPopoverShow` | `() => void` | `undefined` | Callback fired when the popover is shown |
-| `onPopoverHide` | `() => void` | `undefined` | Callback fired when the popover is hidden |
+| `closeOnEscape` | `boolean` | `true` | Hide the popover when the user presses Escape |
+| `popoverProps` | `React.HTMLAttributes<HTMLDivElement>` | `undefined` | Props for the popover element, such as `role`, `aria-*`, or `className` |
+| `onSelectionStart` | `() => void` | `undefined` | Fires when a selection begins inside the wrapper |
+| `onSelectionEnd` | `(selection: string) => void` | `undefined` | Fires when a selection is complete, with the selected text |
+| `onPopoverShow` | `() => void` | `undefined` | Fires when the popover appears |
+| `onPopoverHide` | `() => void` | `undefined` | Fires when the popover hides |
 
-Callbacks can be inline functions. The latest version is always called, and changing them doesn't trigger extra callbacks.
+Callbacks can be inline functions. The component always calls the latest version, and a new function on each render doesn't fire extra callbacks.
 
-### `renderPopover`
+### `renderPopover` props
 
-`renderPopover` receives:
+| Prop | Type | Description |
+|------|------|-------------|
+| `selection` | `string` | The selected text |
+| `position` | `{ top: number, left: number }` | Position of the popover's top-left corner |
+| `placement` | `'top'` \| `'bottom'` | Placement after flipping |
+| `range` | `Range \| null` | A copy of the selected range, for example to call `range.getClientRects()` |
 
-- `selection`: `string` - The selected text
-- `position`: `{ top: number, left: number }` - Position of the popover's top-left corner
-- `placement`: `'top'` \| `'bottom'` - Resolved placement, after flipping
-- `range`: `Range | null` - A snapshot of the selected range, e.g. for `range.getClientRects()`
+### `useHighlightPopover`
 
-### `useHighlightPopover` Hook
+`useHighlightPopover` returns the state of the nearest `HighlightPopover`:
 
-The `useHighlightPopover` hook can be used to access the internal state of the `HighlightPopover` component. It returns an object with the following properties:
-
-- `showPopover`: `boolean` - Indicates whether the popover is currently visible
-- `setShowPopover`: `(show: boolean | ((prev: boolean) => boolean)) => void` - Function to manually control popover visibility. Hiding the popover dismisses the current selection until it changes
-- `popoverPosition`: `{ top: number, left: number }` - Current position of the popover
-- `placement`: `'top'` \| `'bottom'` - Resolved placement of the popover
-- `currentSelection`: `string` - Currently selected text
-- `setCurrentSelection`: `(selection: string) => void` - Function to manually update the current selection
-- `selectionRange`: `Range | null` - A snapshot of the selected range
+| Value | Type | Description |
+|-------|------|-------------|
+| `showPopover` | `boolean` | Whether the popover is visible |
+| `setShowPopover` | `(show: boolean \| ((prev: boolean) => boolean)) => void` | Shows or hides the popover. Hiding it keeps it hidden until the selection changes |
+| `popoverPosition` | `{ top: number, left: number }` | Position of the popover's top-left corner |
+| `placement` | `'top'` \| `'bottom'` | Placement after flipping |
+| `currentSelection` | `string` | The selected text |
+| `setCurrentSelection` | `(selection: string) => void` | Replaces the selected text |
+| `selectionRange` | `Range \| null` | A copy of the selected range |
 
 ### Types
 
-All types are exported:
+The package exports these types:
 
 ```ts
 import type {
@@ -168,9 +166,9 @@ import type {
 } from '@omsimos/react-highlight-popover';
 ```
 
-## Advanced Example
+## Advanced example
 
-Here's a more advanced example demonstrating custom styling and event handling:
+This example adds a close button, places the popover above the selection, and logs each callback:
 
 ```jsx
 import { HighlightPopover, useHighlightPopover } from '@omsimos/react-highlight-popover';
@@ -212,27 +210,29 @@ export default App;
 
 ## Migrating from v1
 
-- **React 18 or later is required.** React 17 is no longer supported.
-- **`offset.y` now moves the popover away from the selection.** In v1, a positive `y` moved it up. Flip the sign: `offset={{ y: -10 }}` becomes `offset={{ y: 10 }}`.
-- **`offset.x` always moves the popover right.** In v1, it moved left with `alignment="right"`.
-- **`position` is now the popover's top-left corner.** In v1, it was the anchor point under the selection, and the popover was centered with a CSS transform.
-- **The popover waits for the pointer to be released.** Add `showWhileSelecting` to keep the v1 behavior.
-- **`onSelectionStart` fires when a selection begins**, before `onSelectionEnd`. In v1, it fired together with `onPopoverShow`.
-- **The popover no longer has `role="tooltip"` and `aria-live="polite"`.** Pass them with `popoverProps` if you need them.
-- **The popover may flip or shift to stay in the viewport.** Set `avoidCollisions={false}` to turn this off.
-- **Escape hides the popover.** Set `closeOnEscape={false}` to turn this off.
-- **The build output is `dist/index.mjs`.** Import from the package name. Deep imports into `dist` will break.
+- v2 requires React 18 or later.
+- A positive `offset.y` now moves the popover away from the selection. In v1, it moved the popover up. Flip the sign, so `offset={{ y: -10 }}` becomes `offset={{ y: 10 }}`.
+- `offset.x` always moves the popover right. In v1, it moved the popover left with `alignment="right"`.
+- `position` is now the popover's top-left corner. In v1, it was the anchor point under the selection, and a CSS transform centered the popover.
+- The popover waits until the user releases the mouse. Add `showWhileSelecting` to keep the v1 behavior.
+- `onSelectionStart` fires when a selection begins, before `onSelectionEnd`. In v1, it fired together with `onPopoverShow`.
+- The popover no longer has `role="tooltip"` and `aria-live="polite"`. Pass them with `popoverProps` if you need them.
+- The popover may flip or shift to stay in the viewport. Set `avoidCollisions={false}` to turn this off.
+- Escape hides the popover. Set `closeOnEscape={false}` to turn this off.
+- The build output is now `dist/index.mjs`. Import from the package name, because deep imports into `dist` will break.
 
 ## Contributing
-Contributions are welcome! Please feel free to submit a pull request, we appreciate your interest and look forward to collaborating with you. If you like this project, please consider giving it a star! ✨ 
 
-If your change affects the published package, add a changeset describing it:
+Pull requests are welcome. If you like the project, consider giving it a star.
+
+If your change affects the published package, add a changeset that describes it:
 
 ```sh
 bunx changeset
 ```
 
-When changes land on `main`, a release workflow opens a version pull request. Merging that pull request publishes the new version to npm.
+After a pull request with a changeset merges into `main`, the release workflow opens a version pull request. Merging the version pull request publishes the new version to npm.
 
 ## License
-This project is licensed under the [MIT License](LICENSE)
+
+[MIT](lib/LICENSE)
