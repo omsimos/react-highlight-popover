@@ -112,7 +112,7 @@ export function PortalDemo() {
         />
         <code className="font-mono text-xs">portal</code>
       </label>
-      <div className="h-24 overflow-hidden rounded-lg border border-dashed p-4">
+      <div className="overflow-hidden rounded-lg border border-dashed px-4 py-3">
         <HighlightPopover
           portal={portal}
           offset={{ y: 8 }}

@@ -67,6 +67,24 @@ const selectNode = async (node: Node) => {
   await flush();
 };
 
+const setSelection = async (
+  startNode: Node,
+  startOffset: number,
+  endNode: Node,
+  endOffset: number,
+) => {
+  await act(async () => {
+    const range = document.createRange();
+    range.setStart(startNode, startOffset);
+    range.setEnd(endNode, endOffset);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    dispatchSelectionChange();
+  });
+  await flush();
+};
+
 const clearSelection = async () => {
   await act(async () => {
     window.getSelection()?.removeAllRanges();
@@ -639,6 +657,107 @@ describe("HighlightPopover", () => {
       expect(onSelectionEnd).toHaveBeenCalledTimes(1);
       expect(onSelectionEnd).toHaveBeenCalledWith("Original text");
       expect(screen.getByTestId("inner")).toBeDefined();
+    });
+
+    test("dragging from the text into the popover doesn't re-anchor it", async () => {
+      const onSelectionEnd = mock();
+
+      render(
+        <HighlightPopover
+          renderPopover={() => <span data-testid="inner">Popover text</span>}
+          onSelectionEnd={onSelectionEnd}
+        >
+          <p data-testid="text">Original text</p>
+        </HighlightPopover>,
+      );
+
+      await selectNode(screen.getByTestId("text"));
+      await setSelection(
+        screen.getByTestId("text").firstChild!,
+        0,
+        screen.getByTestId("inner").firstChild!,
+        4,
+      );
+
+      expect(onSelectionEnd).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId("inner")).toBeDefined();
+    });
+
+    describe("triple-click selections", () => {
+      // Triple-clicking a paragraph selects up to offset 0 of the next block.
+      test("shows the popover when the selection ends in the next block", async () => {
+        const renderPopover = mock((_: PopoverRenderProps) => (
+          <div data-testid="popover" />
+        ));
+
+        render(
+          <>
+            <HighlightPopover renderPopover={renderPopover}>
+              <p data-testid="text">Paragraph text</p>
+            </HighlightPopover>
+            <p data-testid="next">Next paragraph</p>
+          </>,
+        );
+
+        await setSelection(
+          screen.getByTestId("text").firstChild!,
+          0,
+          screen.getByTestId("next"),
+          0,
+        );
+
+        expect(screen.getByTestId("popover")).toBeDefined();
+        const { range } = renderPopover.mock.calls.at(-1)![0];
+        expect(range?.toString()).toBe("Paragraph text");
+        const wrapper = screen.getByTestId("text").parentElement!;
+        expect(wrapper.contains(range!.endContainer)).toBe(true);
+      });
+
+      test("updates the popover when the selection ends inside it", async () => {
+        const onSelectionEnd = mock();
+
+        render(
+          <HighlightPopover
+            renderPopover={({ selection }) => (
+              <p data-testid="inner">{selection}</p>
+            )}
+            onSelectionEnd={onSelectionEnd}
+          >
+            <p data-testid="text">Paragraph text</p>
+          </HighlightPopover>,
+        );
+
+        const text = screen.getByTestId("text").firstChild!;
+        await setSelection(text, 0, text, 9);
+        expect(screen.getByTestId("inner").textContent).toBe("Paragraph");
+
+        await setSelection(text, 0, screen.getByTestId("inner"), 0);
+
+        expect(screen.getByTestId("inner").textContent).toBe("Paragraph text");
+        expect(onSelectionEnd).toHaveBeenLastCalledWith("Paragraph text");
+      });
+
+      test("ignores selections that include text after the container", async () => {
+        render(
+          <>
+            <HighlightPopover
+              renderPopover={() => <div data-testid="popover" />}
+            >
+              <p data-testid="text">Paragraph text</p>
+            </HighlightPopover>
+            <p data-testid="next">Next paragraph</p>
+          </>,
+        );
+
+        await setSelection(
+          screen.getByTestId("text").firstChild!,
+          0,
+          screen.getByTestId("next").firstChild!,
+          4,
+        );
+
+        expect(screen.queryByTestId("popover")).toBeNull();
+      });
     });
   });
 
