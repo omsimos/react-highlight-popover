@@ -154,12 +154,48 @@ const isSameRange = (a: Range, b: Range) => {
   }
 };
 
-const isSelectionWithin = (container: Node, selection: Selection) => {
-  for (let i = 0; i < selection.rangeCount; i++) {
+/**
+ * Returns a copy of the selected range limited to the container's text, or
+ * null when the selection includes text outside the container.
+ *
+ * Triple-clicking a paragraph selects up to the start of the next block,
+ * which can be outside the container or inside an inline popover. That
+ * trailing part has no text, so it is cut off instead of rejecting the
+ * selection.
+ */
+const getContainedRange = (
+  container: Element,
+  popover: Node | null,
+  selection: Selection,
+): Range | null => {
+  for (let i = 1; i < selection.rangeCount; i++) {
     const range = selection.getRangeAt(i);
-    if (!container.contains(range.commonAncestorContainer)) return false;
+    if (!container.contains(range.commonAncestorContainer)) return null;
   }
-  return true;
+
+  const range = selection.getRangeAt(0).cloneRange();
+  if (!container.contains(range.startContainer)) return null;
+  if (popover?.contains(range.startContainer)) return null;
+
+  // The selectable content ends before an inline popover, or at the end of
+  // the container.
+  const limit = container.ownerDocument.createRange();
+  if (popover && container.contains(popover)) {
+    limit.setStartBefore(popover);
+  } else {
+    limit.selectNodeContents(container);
+    limit.collapse(false);
+  }
+
+  const { startContainer: node, startOffset: offset } = limit;
+  if (range.comparePoint(node, offset) === 0) {
+    const tail = range.cloneRange();
+    tail.setStart(node, offset);
+    if (tail.toString().trim()) return null;
+    range.setEnd(node, offset);
+  }
+
+  return range;
 };
 
 const HighlightPopoverContext =
@@ -284,22 +320,22 @@ export function HighlightPopover({
 
     const selection = container.ownerDocument.getSelection();
     const popover = popoverRef.current;
-    if (
-      popover &&
-      selection &&
-      (popover.contains(selection.anchorNode) ||
-        popover.contains(selection.focusNode))
-    ) {
+    // Selecting text inside the popover doesn't move it.
+    if (popover && selection && popover.contains(selection.anchorNode)) {
+      return;
+    }
+
+    if (!selection || selection.rangeCount === 0) {
+      resetSelection();
       return;
     }
 
     // Check containment first so other instances on the page skip the
     // cost of stringifying a large selection.
-    if (
-      !selection ||
-      selection.rangeCount === 0 ||
-      !isSelectionWithin(container, selection)
-    ) {
+    const range = getContainedRange(container, popover, selection);
+    if (!range) {
+      // Dragging from the text into the popover doesn't move it either.
+      if (popover?.contains(selection.focusNode)) return;
       resetSelection();
       return;
     }
@@ -318,7 +354,6 @@ export function HighlightPopover({
 
     if (pointerDownRef.current && !options.showWhileSelecting) return;
 
-    const range = selection.getRangeAt(0);
     if (dismissedRangeRef.current) {
       if (isSameRange(dismissedRangeRef.current, range)) return;
       dismissedRangeRef.current = null;
@@ -331,10 +366,9 @@ export function HighlightPopover({
       return;
     }
 
-    // Browsers may mutate the live range, so keep a snapshot.
-    const snapshot = range.cloneRange();
-    rangeRef.current = snapshot;
-    setSelectionRange(snapshot);
+    // `range` is already a copy, which the browser can't mutate.
+    rangeRef.current = range;
+    setSelectionRange(range);
     setCurrentSelection(text);
     applyShow(true);
 

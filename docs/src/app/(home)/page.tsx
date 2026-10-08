@@ -28,7 +28,7 @@ const features = [
   {
     icon: Feather,
     title: "Small",
-    body: "About 2.3 kB gzipped, with no dependencies besides React.",
+    body: "About 2.4 kB gzipped, with no dependencies besides React.",
   },
   {
     icon: Move,

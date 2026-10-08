@@ -13,7 +13,7 @@ A headless React component that shows a popover when people select text. It has 
 ## Features
 
 - You render the popover content. The component tracks the selection and positions the popover.
-- About 2.3 kB gzipped, with no dependencies besides React.
+- About 2.4 kB gzipped, with no dependencies besides React.
 - The popover appears after the user releases the mouse, not during the drag.
 - Placement above or below the selection, with alignment and offset props.
 - The popover flips and shifts to stay in the viewport, and follows the selection on scroll, resize, and reflow.
