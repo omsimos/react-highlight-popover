@@ -23,32 +23,32 @@ const features = [
   {
     icon: Blocks,
     title: "Headless",
-    body: "Render any React element. There are no styles to override.",
+    body: "Render any React element. The component adds no styles of its own.",
   },
   {
     icon: Feather,
-    title: "Tiny",
+    title: "Small",
     body: "About 2.3 kB gzipped, with no dependencies besides React.",
   },
   {
     icon: Move,
-    title: "Smart positioning",
-    body: "Flips and shifts to stay on screen, and follows the text on scroll and resize.",
+    title: "Collision handling",
+    body: "The popover flips and shifts to stay on screen, and follows the text on scroll and resize.",
   },
   {
     icon: MousePointerClick,
     title: "Waits for release",
-    body: "Appears once the selection is complete, not halfway through a drag.",
+    body: "The popover appears after the user releases the mouse, not halfway through a drag.",
   },
   {
     icon: Accessibility,
-    title: "Accessible",
-    body: "Escape to dismiss, keyboard selection, and your own ARIA attributes.",
+    title: "Keyboard and ARIA",
+    body: "Escape hides the popover, keyboard selections show it, and popoverProps sets its ARIA attributes.",
   },
   {
     icon: Server,
-    title: "Server Component ready",
-    body: "Ships with “use client”, so it drops into any Next.js page.",
+    title: "Server Components",
+    body: 'The build includes a "use client" directive, so you can render it from a Server Component.',
   },
 ];
 
@@ -108,7 +108,7 @@ export default function HomePage() {
             <span className="rounded-full bg-marker px-2 py-0.5 font-medium text-marker-ink">
               v2
             </span>
-            Smart positioning, portals, and more
+            Placement, collision handling, and portals
             <ArrowRight
               aria-hidden
               className="size-3 transition-transform duration-150 group-hover:translate-x-0.5"
@@ -122,9 +122,9 @@ export default function HomePage() {
           </h1>
 
           <p className="mt-6 max-w-xl text-lg text-fd-muted-foreground text-pretty">
-            A headless React component that appears when people select text. You
-            design the popover. It handles selection, positioning, and
-            dismissal.
+            A headless React component that shows a popover when people select
+            text. You write the popover. The component decides when to show it,
+            where to place it, and when to hide it.
           </p>
 
           <div className="mt-9 flex w-full flex-col items-center justify-center gap-3 sm:flex-row">
@@ -150,9 +150,9 @@ export default function HomePage() {
 
       <section className="border-t px-4 py-24">
         <div className="mx-auto max-w-5xl">
-          <SectionHeading eyebrow="Playground" title="Try every option">
-            Select text in the box, then adjust the props. The code updates as
-            you go.
+          <SectionHeading eyebrow="Playground" title="Try the options">
+            Select text in the box, then change the options. The code below
+            updates to match.
           </SectionHeading>
           <Playground />
         </div>
@@ -160,10 +160,7 @@ export default function HomePage() {
 
       <section className="border-t px-4 py-24">
         <SelectionToolbar className="mx-auto max-w-5xl">
-          <SectionHeading
-            eyebrow="Features"
-            title="A small API with careful details"
-          />
+          <SectionHeading eyebrow="Features" title="What it handles for you" />
           <ul className="grid gap-px overflow-hidden rounded-2xl border bg-fd-border sm:grid-cols-2 lg:grid-cols-3">
             {features.map(({ icon: Icon, title, body }) => (
               <li key={title} className="bg-fd-background p-7">
@@ -189,13 +186,13 @@ export default function HomePage() {
               Quick start
             </p>
             <h2 className="mt-3 font-serif text-4xl tracking-tight sm:text-5xl">
-              Wrap your content. That’s it.
+              Wrap the text people can select
             </h2>
             <p className="mt-4 text-fd-muted-foreground text-pretty">
               Pass a <code className="font-mono text-sm">renderPopover</code>{" "}
-              function and render whatever you like. Use the{" "}
+              function that returns your popover. Inside the popover, the{" "}
               <code className="font-mono text-sm">useHighlightPopover</code>{" "}
-              hook to read the selection or close the popover from inside it.
+              hook reads the selection and can close the popover.
             </p>
             <Link
               href="/docs"
@@ -214,7 +211,7 @@ export default function HomePage() {
       <section className="border-t px-4 py-28">
         <SelectionToolbar className="mx-auto flex max-w-3xl flex-col items-center text-center">
           <h2 className="font-serif text-5xl tracking-tight text-balance sm:text-6xl">
-            Select text. <span className="italic">Show anything.</span>
+            Add a <span className="italic">selection popover</span> to your app
           </h2>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <Link

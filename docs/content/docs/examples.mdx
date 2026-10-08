@@ -1,11 +1,11 @@
 ---
 title: Examples
-description: Patterns built with HighlightPopover.
+description: A selection toolbar, an arrow, and an entrance animation.
 ---
 
 ## Selection toolbar
 
-A toolbar with real actions. **Highlight** passes the selected `range` to the [CSS Custom Highlight API](https://developer.mozilla.org/docs/Web/API/CSS_Custom_Highlight_API), so highlights persist without changing the page content.
+This toolbar highlights or copies the selected text. The Highlight button passes the selected `range` to the [CSS Custom Highlight API](https://developer.mozilla.org/docs/Web/API/CSS_Custom_Highlight_API), which draws the highlight without changing the page's DOM.
 
 <ToolbarDemo />
 
@@ -62,7 +62,7 @@ Use the `data-placement` attribute to point an arrow at the selection. With Tail
 
 ## Entrance animation
 
-The popover mounts when it's shown, so `@starting-style` animates it in without JavaScript. Scale it from the side that faces the selection:
+React mounts the popover each time it appears, so `@starting-style` can animate it in without JavaScript. Scale it from the side that faces the selection:
 
 ```css
 .popover {

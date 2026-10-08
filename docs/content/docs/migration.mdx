@@ -3,7 +3,7 @@ title: Migrating from v1
 description: Breaking changes in v2 and how to update.
 ---
 
-v2 fixes several bugs, adds positioning features, and requires a few changes.
+v2 changes how offsets, positioning, and ARIA attributes work. This page lists each change and how to update your code.
 
 ```npm
 npm i @omsimos/react-highlight-popover@2
@@ -13,7 +13,7 @@ npm i @omsimos/react-highlight-popover@2
 
 ### React 18 or later
 
-React 17 is no longer supported.
+v2 drops support for React 17.
 
 ### Offset direction
 
@@ -28,11 +28,11 @@ A positive `offset.y` now moves the popover away from the selection. In v1, it m
 
 ### Position
 
-`position` is now the popover's top-left corner. In v1, it was the anchor point under the selection, and the popover was centered with a CSS transform.
+`position` is now the popover's top-left corner. In v1, it was the anchor point under the selection, and a CSS transform centered the popover.
 
 ### Showing the popover
 
-The popover now waits for the pointer to be released. Add `showWhileSelecting` to keep the v1 behavior.
+The popover now waits until the user releases the mouse. Add `showWhileSelecting` to keep the v1 behavior.
 
 `onSelectionStart` now fires when a selection begins, before `onSelectionEnd`. In v1, it fired together with `onPopoverShow`.
 
@@ -42,11 +42,11 @@ The popover no longer has `role="tooltip"` and `aria-live="polite"`. Pass them w
 
 ### Package output
 
-The build output is now `dist/index.mjs`. Import from the package name, since deep imports into `dist` will break.
+The build output is now `dist/index.mjs`. Import from the package name, because deep imports into `dist` will break.
 
 ## New defaults
 
-These are on by default, and you can turn them off:
+v2 turns on two behaviors by default:
 
 - **Collision handling.** The popover flips and shifts to stay in the viewport. Set `avoidCollisions={false}` to turn this off.
 - **Escape to dismiss.** Set `closeOnEscape={false}` to turn this off.
@@ -57,5 +57,5 @@ These are on by default, and you can turn them off:
 - `range` and `placement` in `renderPopover`, and `selectionRange` and `placement` in `useHighlightPopover`
 - A `data-placement` attribute on the popover element
 - The popover follows the selection on scroll, resize, and reflow
-- Exported types
+- The package exports its types
 - `"use client"` for Server Components

@@ -7,7 +7,7 @@ description: Placement, alignment, offsets, collision handling, and portals.
 
 ## Placement and alignment
 
-The popover is placed below the selection by default. Use `placement="top"` to place it above. Use `alignment` to line it up with the left edge, center, or right edge of the selection.
+The popover appears below the selection by default. Use `placement="top"` to place it above. Use `alignment` to line it up with the left edge, center, or right edge of the selection.
 
 ```tsx
 <HighlightPopover placement="top" alignment="left" renderPopover={renderPopover}>
@@ -33,7 +33,7 @@ The popover is placed below the selection by default. Use `placement="top"` to p
 
 When the popover doesn't fit in the viewport, it flips to the other side of the selection and shifts horizontally to stay on screen. Set `collisionPadding` to change the minimum distance from the viewport edges, or `avoidCollisions={false}` to turn this off.
 
-The popover element has a `data-placement` attribute with the resolved placement. `renderPopover` and `useHighlightPopover` also return it as `placement`. See the [arrow example](/docs/examples#arrow).
+The popover element has a `data-placement` attribute with the placement after flipping. `renderPopover` and `useHighlightPopover` also return it as `placement`. See the [arrow example](/docs/examples#arrow).
 
 ## Following the selection
 
@@ -41,7 +41,7 @@ The popover follows the selection when the page scrolls, the window resizes, the
 
 ## Portals
 
-The popover is rendered inside the wrapper element. If an ancestor has `overflow: hidden`, render the popover in a portal so it can't be clipped:
+The component renders the popover inside the wrapper element. If an ancestor has `overflow: hidden`, render the popover in a portal so the ancestor can't clip it:
 
 <PortalDemo />
 
@@ -51,4 +51,4 @@ The popover is rendered inside the wrapper element. If an ancestor has `overflow
 </HighlightPopover>
 ```
 
-`portal` also accepts an element to render into. Portalled popovers use `position: fixed`, so the target element shouldn't have a `transform`.
+`portal` also accepts an element to render into. A portalled popover uses `position: fixed`, so the target element shouldn't have a `transform`.
