@@ -185,6 +185,28 @@ describe("HighlightPopover", () => {
     expect(renderPopover).not.toHaveBeenCalled();
   });
 
+  test("doesn't read the text of selections outside the container", async () => {
+    render(
+      <>
+        <p data-testid="outside">Outside</p>
+        <HighlightPopover renderPopover={() => <div />}>
+          <p>Inside</p>
+        </HighlightPopover>
+      </>,
+    );
+
+    const selection = window.getSelection()!;
+    const toString = mock(() => "Outside");
+    selection.toString = toString;
+    restorers.push(() => {
+      delete (selection as Partial<Selection>).toString;
+    });
+
+    await selectNode(screen.getByTestId("outside"));
+
+    expect(toString).not.toHaveBeenCalled();
+  });
+
   test("fires lifecycle callbacks once per show/hide cycle", async () => {
     const onSelectionStart = mock();
     const onSelectionEnd = mock();
@@ -370,6 +392,29 @@ describe("HighlightPopover", () => {
       const popover = screen.getByTestId("popover").parentElement!;
       expect(popover.parentElement).toBe(document.body);
       expect(popover.getAttribute("style")).toContain("position: fixed");
+    });
+
+    test("follows the selection on scroll with one update per frame", async () => {
+      const renderPopover = mock(() => <div />);
+
+      render(
+        <HighlightPopover renderPopover={renderPopover} portal>
+          <p data-testid="text">Scroll text</p>
+        </HighlightPopover>,
+      );
+
+      await selectNode(screen.getByTestId("text"));
+      expect(getPosition(renderPopover)).toEqual({ top: 50, left: 50 });
+      const renders = renderPopover.mock.calls.length;
+
+      rangeRect = { ...rangeRect, top: -100 };
+      await act(async () => {
+        for (let i = 0; i < 3; i++) window.dispatchEvent(new Event("scroll"));
+      });
+      await flush();
+
+      expect(getPosition(renderPopover)).toEqual({ top: -50, left: 50 });
+      expect(renderPopover.mock.calls.length).toBe(renders + 1);
     });
   });
 
