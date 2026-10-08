@@ -1,5 +1,4 @@
 import {
-  memo,
   useRef,
   useMemo,
   useState,
@@ -15,7 +14,7 @@ import type {
   HTMLAttributes,
   SetStateAction,
   Dispatch,
-  NamedExoticComponent,
+  ReactElement,
 } from "react";
 import { createPortal, flushSync } from "react-dom";
 
@@ -184,415 +183,431 @@ export function useHighlightPopover(): HighlightPopoverContextValue {
 /**
  * HighlightPopover component for creating popovers on text selection within a container.
  */
-export const HighlightPopover: NamedExoticComponent<HighlightPopoverProps> =
-  memo(function HighlightPopover({
-    children,
-    renderPopover,
-    className,
-    offset,
-    zIndex = 40,
-    alignment = "center",
-    placement = "bottom",
-    avoidCollisions = true,
-    collisionPadding = 8,
-    portal = false,
-    minSelectionLength = 1,
-    showWhileSelecting = false,
-    closeOnEscape = true,
-    popoverProps,
+export function HighlightPopover({
+  children,
+  renderPopover,
+  className,
+  offset,
+  zIndex = 40,
+  alignment = "center",
+  placement = "bottom",
+  avoidCollisions = true,
+  collisionPadding = 8,
+  portal = false,
+  minSelectionLength = 1,
+  showWhileSelecting = false,
+  closeOnEscape = true,
+  popoverProps,
+  onSelectionStart,
+  onSelectionEnd,
+  onPopoverShow,
+  onPopoverHide,
+}: HighlightPopoverProps): ReactElement {
+  const offsetX = offset?.x ?? 0;
+  const offsetY = offset?.y ?? 0;
+  const isPortalled = portal !== false;
+
+  const [showPopover, setShowPopoverState] = useState(false);
+  const [currentSelection, setCurrentSelection] = useState("");
+  const [selectionRange, setSelectionRange] = useState<Range | null>(null);
+  const [layout, setLayout] = useState<Layout>({
+    top: 0,
+    left: 0,
+    placement,
+  });
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const showRef = useRef(false);
+  const rangeRef = useRef<Range | null>(null);
+  const dismissedRangeRef = useRef<Range | null>(null);
+  const selectingRef = useRef(false);
+  const reportedSelectionRef = useRef("");
+  const pointerDownRef = useRef(false);
+  const pointerInPopoverRef = useRef(false);
+  const frameRef = useRef<number | null>(null);
+  const notifiedShowRef = useRef(false);
+
+  // Read through refs so listeners subscribe once and inline props are safe.
+  const callbacksRef = useLatest({
     onSelectionStart,
     onSelectionEnd,
     onPopoverShow,
     onPopoverHide,
-  }: HighlightPopoverProps) {
-    const offsetX = offset?.x ?? 0;
-    const offsetY = offset?.y ?? 0;
-    const isPortalled = portal !== false;
+  });
+  const optionsRef = useLatest({
+    offsetX,
+    offsetY,
+    alignment,
+    placement,
+    isPortalled,
+    avoidCollisions,
+    collisionPadding,
+    minSelectionLength,
+    showWhileSelecting,
+  });
 
-    const [showPopover, setShowPopoverState] = useState(false);
-    const [currentSelection, setCurrentSelection] = useState("");
-    const [selectionRange, setSelectionRange] = useState<Range | null>(null);
-    const [layout, setLayout] = useState<Layout>({
-      top: 0,
-      left: 0,
-      placement,
-    });
+  const applyShow = useCallback((show: boolean) => {
+    if (showRef.current === show) return;
+    showRef.current = show;
+    setShowPopoverState(show);
+  }, []);
 
-    const containerRef = useRef<HTMLDivElement>(null);
-    const popoverRef = useRef<HTMLDivElement>(null);
-    const showRef = useRef(false);
-    const rangeRef = useRef<Range | null>(null);
-    const dismissedRangeRef = useRef<Range | null>(null);
-    const selectingRef = useRef(false);
-    const reportedSelectionRef = useRef("");
-    const pointerDownRef = useRef(false);
-    const pointerInPopoverRef = useRef(false);
-    const frameRef = useRef<number | null>(null);
-    const notifiedShowRef = useRef(false);
+  const setShowPopover = useCallback(
+    (value: SetStateAction<boolean>) => {
+      const show = typeof value === "function" ? value(showRef.current) : value;
+      dismissedRangeRef.current = show ? null : rangeRef.current;
+      if (!show) reportedSelectionRef.current = "";
+      applyShow(show);
+    },
+    [applyShow],
+  );
 
-    // Read through refs so listeners subscribe once and inline props are safe.
-    const callbacksRef = useLatest({
-      onSelectionStart,
-      onSelectionEnd,
-      onPopoverShow,
-      onPopoverHide,
-    });
-    const optionsRef = useLatest({
-      offsetX,
-      offsetY,
-      alignment,
-      placement,
-      isPortalled,
-      avoidCollisions,
-      collisionPadding,
-      minSelectionLength,
-      showWhileSelecting,
-    });
+  const resetSelection = useCallback(() => {
+    selectingRef.current = false;
+    dismissedRangeRef.current = null;
+    reportedSelectionRef.current = "";
+    if (rangeRef.current) {
+      rangeRef.current = null;
+      setSelectionRange(null);
+    }
+    setCurrentSelection((prev) => (prev === "" ? prev : ""));
+    applyShow(false);
+  }, [applyShow]);
 
-    const applyShow = useCallback((show: boolean) => {
-      if (showRef.current === show) return;
-      showRef.current = show;
-      setShowPopoverState(show);
-    }, []);
+  const evaluateSelection = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
 
-    const setShowPopover = useCallback(
-      (value: SetStateAction<boolean>) => {
-        const show =
-          typeof value === "function" ? value(showRef.current) : value;
-        dismissedRangeRef.current = show ? null : rangeRef.current;
-        if (!show) reportedSelectionRef.current = "";
-        applyShow(show);
-      },
-      [applyShow],
-    );
+    // Leave the popover alone while it is being interacted with.
+    if (pointerDownRef.current && pointerInPopoverRef.current) return;
 
-    const resetSelection = useCallback(() => {
-      selectingRef.current = false;
+    const selection = container.ownerDocument.getSelection();
+    const popover = popoverRef.current;
+    if (
+      popover &&
+      selection &&
+      (popover.contains(selection.anchorNode) ||
+        popover.contains(selection.focusNode))
+    ) {
+      return;
+    }
+
+    // Check containment first so other instances on the page skip the
+    // cost of stringifying a large selection.
+    if (
+      !selection ||
+      selection.rangeCount === 0 ||
+      !isSelectionWithin(container, selection)
+    ) {
+      resetSelection();
+      return;
+    }
+
+    const options = optionsRef.current;
+    const text = selection.toString().trim();
+    if (text.length < options.minSelectionLength) {
+      resetSelection();
+      return;
+    }
+
+    if (!selectingRef.current) {
+      selectingRef.current = true;
+      callbacksRef.current.onSelectionStart?.();
+    }
+
+    if (pointerDownRef.current && !options.showWhileSelecting) return;
+
+    const range = selection.getRangeAt(0);
+    if (dismissedRangeRef.current) {
+      if (isSameRange(dismissedRangeRef.current, range)) return;
       dismissedRangeRef.current = null;
-      reportedSelectionRef.current = "";
-      if (rangeRef.current) {
-        rangeRef.current = null;
-        setSelectionRange(null);
-      }
-      setCurrentSelection((prev) => (prev === "" ? prev : ""));
-      applyShow(false);
-    }, [applyShow]);
+    }
+    if (
+      showRef.current &&
+      rangeRef.current &&
+      isSameRange(rangeRef.current, range)
+    ) {
+      return;
+    }
 
-    const evaluateSelection = useCallback(() => {
-      const container = containerRef.current;
-      if (!container) return;
+    // Browsers may mutate the live range, so keep a snapshot.
+    const snapshot = range.cloneRange();
+    rangeRef.current = snapshot;
+    setSelectionRange(snapshot);
+    setCurrentSelection(text);
+    applyShow(true);
 
-      // Leave the popover alone while it is being interacted with.
-      if (pointerDownRef.current && pointerInPopoverRef.current) return;
+    if (reportedSelectionRef.current !== text) {
+      reportedSelectionRef.current = text;
+      callbacksRef.current.onSelectionEnd?.(text);
+    }
+  }, [applyShow, callbacksRef, optionsRef, resetSelection]);
 
-      const selection = container.ownerDocument.getSelection();
-      const popover = popoverRef.current;
-      if (
-        popover &&
-        selection &&
-        (popover.contains(selection.anchorNode) ||
-          popover.contains(selection.focusNode))
-      ) {
-        return;
-      }
+  const updatePosition = useCallback(() => {
+    const container = containerRef.current;
+    const popover = popoverRef.current;
+    const range = rangeRef.current;
+    if (!container || !popover || !range) return;
 
-      const options = optionsRef.current;
-      const text = selection?.toString().trim() ?? "";
-      if (
-        !selection ||
-        selection.rangeCount === 0 ||
-        text.length < options.minSelectionLength ||
-        !isSelectionWithin(container, selection)
-      ) {
-        resetSelection();
-        return;
-      }
-
-      if (!selectingRef.current) {
-        selectingRef.current = true;
-        callbacksRef.current.onSelectionStart?.();
-      }
-
-      if (pointerDownRef.current && !options.showWhileSelecting) return;
-
-      const range = selection.getRangeAt(0);
-      if (dismissedRangeRef.current) {
-        if (isSameRange(dismissedRangeRef.current, range)) return;
-        dismissedRangeRef.current = null;
-      }
-      if (
-        showRef.current &&
-        rangeRef.current &&
-        isSameRange(rangeRef.current, range)
-      ) {
-        return;
-      }
-
-      // Browsers may mutate the live range, so keep a snapshot.
-      const snapshot = range.cloneRange();
-      rangeRef.current = snapshot;
-      setSelectionRange(snapshot);
-      setCurrentSelection(text);
-      applyShow(true);
-
-      if (reportedSelectionRef.current !== text) {
-        reportedSelectionRef.current = text;
-        callbacksRef.current.onSelectionEnd?.(text);
-      }
-    }, [applyShow, callbacksRef, optionsRef, resetSelection]);
-
-    const updatePosition = useCallback(() => {
-      const container = containerRef.current;
-      const popover = popoverRef.current;
-      const range = rangeRef.current;
-      if (!container || !popover || !range) return;
-
-      const {
-        offsetX: x,
-        offsetY: y,
-        alignment,
-        placement: preferred,
-        isPortalled,
-        avoidCollisions,
-        collisionPadding: padding,
-      } = optionsRef.current;
-      const viewport = container.ownerDocument.documentElement;
-      const anchor = range.getBoundingClientRect();
-      const width = popover.offsetWidth;
-      const height = popover.offsetHeight;
-
-      const below = anchor.bottom + y;
-      const above = anchor.top - y - height;
-      let resolved = preferred;
-
-      if (avoidCollisions) {
-        const fitsBelow = below + height <= viewport.clientHeight - padding;
-        const fitsAbove = above >= padding;
-        if (preferred === "bottom" && !fitsBelow && fitsAbove) {
-          resolved = "top";
-        } else if (preferred === "top" && !fitsAbove && fitsBelow) {
-          resolved = "bottom";
-        }
-      }
-
-      let top = resolved === "bottom" ? below : above;
-      let left =
-        alignment === "left"
-          ? anchor.left + x
-          : alignment === "right"
-            ? anchor.right - width + x
-            : anchor.left + anchor.width / 2 - width / 2 + x;
-
-      if (avoidCollisions) {
-        const maxLeft = viewport.clientWidth - width - padding;
-        left = Math.max(padding, Math.min(left, maxLeft));
-      }
-
-      if (!isPortalled) {
-        const rect = container.getBoundingClientRect();
-        top += container.scrollTop - rect.top - container.clientTop;
-        left += container.scrollLeft - rect.left - container.clientLeft;
-      }
-
-      setLayout((prev) =>
-        prev.top === top && prev.left === left && prev.placement === resolved
-          ? prev
-          : { top, left, placement: resolved },
-      );
-    }, [optionsRef]);
-
-    // Listen for selection and pointer changes for the component's lifetime.
-    useEffect(() => {
-      const container = containerRef.current;
-      if (!container) return;
-      const doc = container.ownerDocument;
-      const win = doc.defaultView ?? window;
-
-      const schedule = () => {
-        if (frameRef.current !== null) return;
-        frameRef.current = win.requestAnimationFrame(() => {
-          frameRef.current = null;
-          evaluateSelection();
-        });
-      };
-      const onPointerDown = (event: PointerEvent) => {
-        if (event.button !== 0) return;
-        pointerDownRef.current = true;
-        pointerInPopoverRef.current =
-          popoverRef.current?.contains(event.target as Node) ?? false;
-      };
-      const onPointerUp = () => {
-        if (!pointerDownRef.current) return;
-        pointerDownRef.current = false;
-        pointerInPopoverRef.current = false;
-        schedule();
-      };
-
-      doc.addEventListener("selectionchange", schedule);
-      doc.addEventListener("pointerdown", onPointerDown, true);
-      doc.addEventListener("pointerup", onPointerUp, true);
-      doc.addEventListener("pointercancel", onPointerUp, true);
-      win.addEventListener("blur", onPointerUp);
-
-      return () => {
-        doc.removeEventListener("selectionchange", schedule);
-        doc.removeEventListener("pointerdown", onPointerDown, true);
-        doc.removeEventListener("pointerup", onPointerUp, true);
-        doc.removeEventListener("pointercancel", onPointerUp, true);
-        win.removeEventListener("blur", onPointerUp);
-        if (frameRef.current !== null) {
-          win.cancelAnimationFrame(frameRef.current);
-          frameRef.current = null;
-        }
-      };
-    }, [evaluateSelection]);
-
-    // Measure and position before paint whenever the inputs change.
-    useIsomorphicLayoutEffect(() => {
-      if (showPopover) updatePosition();
-    }, [
-      showPopover,
-      selectionRange,
-      currentSelection,
-      offsetX,
-      offsetY,
+    const {
+      offsetX: x,
+      offsetY: y,
       alignment,
-      placement,
+      placement: preferred,
       isPortalled,
       avoidCollisions,
-      collisionPadding,
-      updatePosition,
-    ]);
+      collisionPadding: padding,
+    } = optionsRef.current;
+    const viewport = container.ownerDocument.documentElement;
+    const anchor = range.getBoundingClientRect();
+    const width = popover.offsetWidth;
+    const height = popover.offsetHeight;
 
-    // Keep the popover attached on scroll, resize and reflow.
-    useEffect(() => {
-      const container = containerRef.current;
-      if (!showPopover || !container) return;
-      const win = container.ownerDocument.defaultView ?? window;
+    const below = anchor.bottom + y;
+    const above = anchor.top - y - height;
+    let resolved = preferred;
 
-      const onChange = () => flushSync(updatePosition);
-      const observer =
-        typeof ResizeObserver === "undefined"
-          ? null
-          : new ResizeObserver(onChange);
-      observer?.observe(container);
-      if (popoverRef.current) observer?.observe(popoverRef.current);
-      win.addEventListener("scroll", onChange, {
-        capture: true,
-        passive: true,
-      });
-      win.addEventListener("resize", onChange, { passive: true });
-
-      return () => {
-        observer?.disconnect();
-        win.removeEventListener("scroll", onChange, { capture: true });
-        win.removeEventListener("resize", onChange);
-      };
-    }, [showPopover, updatePosition]);
-
-    useEffect(() => {
-      const container = containerRef.current;
-      if (!showPopover || !closeOnEscape || !container) return;
-      const doc = container.ownerDocument;
-
-      const onKeyDown = (event: KeyboardEvent) => {
-        if (event.key === "Escape") setShowPopover(false);
-      };
-
-      doc.addEventListener("keydown", onKeyDown);
-      return () => doc.removeEventListener("keydown", onKeyDown);
-    }, [showPopover, closeOnEscape, setShowPopover]);
-
-    useEffect(() => {
-      if (notifiedShowRef.current === showPopover) return;
-      notifiedShowRef.current = showPopover;
-      if (showPopover) {
-        callbacksRef.current.onPopoverShow?.();
-      } else {
-        callbacksRef.current.onPopoverHide?.();
-      }
-    }, [showPopover, callbacksRef]);
-
-    useEffect(() => {
-      return () => {
-        if (notifiedShowRef.current) {
-          notifiedShowRef.current = false;
-          callbacksRef.current.onPopoverHide?.();
-        }
-      };
-    }, [callbacksRef]);
-
-    const popoverPosition = useMemo<PopoverPosition>(
-      () => ({ top: layout.top, left: layout.left }),
-      [layout.top, layout.left],
-    );
-
-    const contextValue = useMemo<HighlightPopoverContextValue>(
-      () => ({
-        showPopover,
-        setShowPopover,
-        popoverPosition,
-        placement: layout.placement,
-        currentSelection,
-        setCurrentSelection,
-        selectionRange,
-      }),
-      [
-        showPopover,
-        setShowPopover,
-        popoverPosition,
-        layout.placement,
-        currentSelection,
-        selectionRange,
-      ],
-    );
-
-    let popover: ReactNode = null;
-    if (showPopover) {
-      const style: CSSProperties = {
-        ...popoverProps?.style,
-        position: isPortalled ? "fixed" : "absolute",
-        top: layout.top,
-        left: layout.left,
-        width: "max-content",
-        zIndex,
-      };
-
-      popover = (
-        <div
-          {...popoverProps}
-          ref={popoverRef}
-          style={style}
-          data-placement={layout.placement}
-        >
-          {renderPopover({
-            position: popoverPosition,
-            placement: layout.placement,
-            selection: currentSelection,
-            range: selectionRange,
-          })}
-        </div>
-      );
-
-      if (isPortalled) {
-        const target =
-          portal === true
-            ? (containerRef.current?.ownerDocument ?? document).body
-            : portal;
-        popover = createPortal(popover, target);
+    if (avoidCollisions) {
+      const fitsBelow = below + height <= viewport.clientHeight - padding;
+      const fitsAbove = above >= padding;
+      if (preferred === "bottom" && !fitsBelow && fitsAbove) {
+        resolved = "top";
+      } else if (preferred === "top" && !fitsAbove && fitsBelow) {
+        resolved = "bottom";
       }
     }
 
-    return (
-      <HighlightPopoverContext.Provider value={contextValue}>
-        <div
-          ref={containerRef}
-          style={{ position: "relative" }}
-          className={className}
-        >
-          {children}
-          {popover}
-        </div>
-      </HighlightPopoverContext.Provider>
+    let top = resolved === "bottom" ? below : above;
+    let left =
+      alignment === "left"
+        ? anchor.left + x
+        : alignment === "right"
+          ? anchor.right - width + x
+          : anchor.left + anchor.width / 2 - width / 2 + x;
+
+    if (avoidCollisions) {
+      const maxLeft = viewport.clientWidth - width - padding;
+      left = Math.max(padding, Math.min(left, maxLeft));
+    }
+
+    if (!isPortalled) {
+      const rect = container.getBoundingClientRect();
+      top += container.scrollTop - rect.top - container.clientTop;
+      left += container.scrollLeft - rect.left - container.clientLeft;
+    }
+
+    setLayout((prev) =>
+      prev.top === top && prev.left === left && prev.placement === resolved
+        ? prev
+        : { top, left, placement: resolved },
     );
-  });
+  }, [optionsRef]);
+
+  // Listen for selection and pointer changes for the component's lifetime.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const doc = container.ownerDocument;
+    const win = doc.defaultView ?? window;
+
+    const schedule = () => {
+      if (frameRef.current !== null) return;
+      frameRef.current = win.requestAnimationFrame(() => {
+        frameRef.current = null;
+        evaluateSelection();
+      });
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 0) return;
+      pointerDownRef.current = true;
+      pointerInPopoverRef.current =
+        popoverRef.current?.contains(event.target as Node) ?? false;
+    };
+    const onPointerUp = () => {
+      if (!pointerDownRef.current) return;
+      pointerDownRef.current = false;
+      pointerInPopoverRef.current = false;
+      schedule();
+    };
+
+    doc.addEventListener("selectionchange", schedule);
+    doc.addEventListener("pointerdown", onPointerDown, true);
+    doc.addEventListener("pointerup", onPointerUp, true);
+    doc.addEventListener("pointercancel", onPointerUp, true);
+    win.addEventListener("blur", onPointerUp);
+
+    return () => {
+      doc.removeEventListener("selectionchange", schedule);
+      doc.removeEventListener("pointerdown", onPointerDown, true);
+      doc.removeEventListener("pointerup", onPointerUp, true);
+      doc.removeEventListener("pointercancel", onPointerUp, true);
+      win.removeEventListener("blur", onPointerUp);
+      if (frameRef.current !== null) {
+        win.cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
+    };
+  }, [evaluateSelection]);
+
+  // Measure and position before paint whenever the inputs change.
+  useIsomorphicLayoutEffect(() => {
+    if (showPopover) updatePosition();
+  }, [
+    showPopover,
+    selectionRange,
+    currentSelection,
+    offsetX,
+    offsetY,
+    alignment,
+    placement,
+    isPortalled,
+    avoidCollisions,
+    collisionPadding,
+    updatePosition,
+  ]);
+
+  // Keep the popover attached on scroll, resize and reflow.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!showPopover || !container) return;
+    const win = container.ownerDocument.defaultView ?? window;
+
+    // Flush synchronously so the popover moves in the same frame.
+    const update = () => flushSync(updatePosition);
+    // Nested scroll containers can fire several events per frame. Scroll
+    // and resize events run before animation frames, so batching them
+    // into one frame still updates before paint.
+    let frame: number | null = null;
+    const schedule = () => {
+      if (frame !== null) return;
+      frame = win.requestAnimationFrame(() => {
+        frame = null;
+        update();
+      });
+    };
+
+    const observer =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
+    observer?.observe(container);
+    if (popoverRef.current) observer?.observe(popoverRef.current);
+    win.addEventListener("scroll", schedule, {
+      capture: true,
+      passive: true,
+    });
+    win.addEventListener("resize", schedule, { passive: true });
+
+    return () => {
+      observer?.disconnect();
+      win.removeEventListener("scroll", schedule, { capture: true });
+      win.removeEventListener("resize", schedule);
+      if (frame !== null) win.cancelAnimationFrame(frame);
+    };
+  }, [showPopover, updatePosition]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!showPopover || !closeOnEscape || !container) return;
+    const doc = container.ownerDocument;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShowPopover(false);
+    };
+
+    doc.addEventListener("keydown", onKeyDown);
+    return () => doc.removeEventListener("keydown", onKeyDown);
+  }, [showPopover, closeOnEscape, setShowPopover]);
+
+  useEffect(() => {
+    if (notifiedShowRef.current === showPopover) return;
+    notifiedShowRef.current = showPopover;
+    if (showPopover) {
+      callbacksRef.current.onPopoverShow?.();
+    } else {
+      callbacksRef.current.onPopoverHide?.();
+    }
+  }, [showPopover, callbacksRef]);
+
+  useEffect(() => {
+    return () => {
+      if (notifiedShowRef.current) {
+        notifiedShowRef.current = false;
+        callbacksRef.current.onPopoverHide?.();
+      }
+    };
+  }, [callbacksRef]);
+
+  const popoverPosition = useMemo<PopoverPosition>(
+    () => ({ top: layout.top, left: layout.left }),
+    [layout.top, layout.left],
+  );
+
+  const contextValue = useMemo<HighlightPopoverContextValue>(
+    () => ({
+      showPopover,
+      setShowPopover,
+      popoverPosition,
+      placement: layout.placement,
+      currentSelection,
+      setCurrentSelection,
+      selectionRange,
+    }),
+    [
+      showPopover,
+      setShowPopover,
+      popoverPosition,
+      layout.placement,
+      currentSelection,
+      selectionRange,
+    ],
+  );
+
+  let popover: ReactNode = null;
+  if (showPopover) {
+    const style: CSSProperties = {
+      ...popoverProps?.style,
+      position: isPortalled ? "fixed" : "absolute",
+      top: layout.top,
+      left: layout.left,
+      width: "max-content",
+      zIndex,
+    };
+
+    popover = (
+      <div
+        {...popoverProps}
+        ref={popoverRef}
+        style={style}
+        data-placement={layout.placement}
+      >
+        {renderPopover({
+          position: popoverPosition,
+          placement: layout.placement,
+          selection: currentSelection,
+          range: selectionRange,
+        })}
+      </div>
+    );
+
+    if (isPortalled) {
+      const target =
+        portal === true
+          ? (containerRef.current?.ownerDocument ?? document).body
+          : portal;
+      popover = createPortal(popover, target);
+    }
+  }
+
+  return (
+    <HighlightPopoverContext.Provider value={contextValue}>
+      <div
+        ref={containerRef}
+        style={{ position: "relative" }}
+        className={className}
+      >
+        {children}
+        {popover}
+      </div>
+    </HighlightPopoverContext.Provider>
+  );
+}
