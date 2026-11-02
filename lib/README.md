@@ -22,7 +22,10 @@ Requires React 18 or 19.
 Wrap the content people can select, and return your popover from `renderPopover`. The `useHighlightPopover` hook reads the selection and closes the popover from inside it:
 
 ```jsx
-import { HighlightPopover, useHighlightPopover } from "@omsimos/react-highlight-popover";
+import {
+  HighlightPopover,
+  useHighlightPopover,
+} from "@omsimos/react-highlight-popover";
 
 function Popover() {
   const { currentSelection, setShowPopover } = useHighlightPopover();
@@ -41,7 +44,8 @@ export function Example() {
   return (
     <HighlightPopover renderPopover={() => <Popover />} offset={{ y: 8 }}>
       <p>
-        This is a sample text. Try selecting some words to see the popover in action.
+        This is a sample text. Try selecting some words to see the popover in
+        action.
       </p>
     </HighlightPopover>
   );

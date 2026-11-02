@@ -23,7 +23,10 @@ function Toolbar() {
   };
 
   return (
-    <div role="toolbar" className="flex gap-1 rounded-full bg-black p-1 text-white">
+    <div
+      role="toolbar"
+      className="flex gap-1 rounded-full bg-black p-1 text-white"
+    >
       <button onClick={highlight}>Highlight</button>
       <button onClick={() => navigator.clipboard.writeText(currentSelection)}>
         Copy
