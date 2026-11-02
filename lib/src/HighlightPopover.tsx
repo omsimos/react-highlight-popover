@@ -49,7 +49,7 @@ export interface PopoverRenderProps {
   placement: PopoverPlacement;
   /** The selected text. */
   selection: string;
-  /** A snapshot of the selected range. */
+  /** A copy of the selected range. Changing it doesn't move the popover. */
   range: Range | null;
 }
 
@@ -83,7 +83,10 @@ export interface HighlightPopoverProps {
    * can't clip it. `true` portals into `document.body`.
    */
   portal?: boolean | HTMLElement;
-  /** Minimum length of text selection to trigger the popover. */
+  /**
+   * Minimum length of the trimmed selected text to trigger the popover. An
+   * empty selection never triggers it, even when this is 0.
+   */
   minSelectionLength?: number;
   /**
    * Show and update the popover while the pointer is still dragging. By
@@ -111,8 +114,9 @@ export interface HighlightPopoverContextValue {
   /** Indicates whether the popover is currently visible. */
   showPopover: boolean;
   /**
-   * Function to manually control popover visibility. Hiding the popover
-   * dismisses the current selection until it changes.
+   * Function to manually control popover visibility. Showing the popover
+   * needs a selection to anchor to, so it does nothing without one. Hiding
+   * the popover dismisses the current selection until it changes.
    */
   setShowPopover: (show: SetStateAction<boolean>) => void;
   /** Current position of the popover. */
@@ -123,7 +127,7 @@ export interface HighlightPopoverContextValue {
   currentSelection: string;
   /** Function to manually set the current selection. */
   setCurrentSelection: Dispatch<SetStateAction<string>>;
-  /** A snapshot of the selected range. */
+  /** A copy of the selected range. Changing it doesn't move the popover. */
   selectionRange: Range | null;
 }
 
@@ -168,34 +172,63 @@ const getContainedRange = (
   popover: Node | null,
   selection: Selection,
 ): Range | null => {
+  // Check the first range before copying anything, so instances that don't
+  // contain the selection return early.
+  const first = selection.getRangeAt(0);
+  if (!container.contains(first.startContainer)) return null;
+  if (popover?.contains(first.startContainer)) return null;
+
   for (let i = 1; i < selection.rangeCount; i++) {
     const range = selection.getRangeAt(i);
     if (!container.contains(range.commonAncestorContainer)) return null;
   }
 
-  const range = selection.getRangeAt(0).cloneRange();
-  if (!container.contains(range.startContainer)) return null;
-  if (popover?.contains(range.startContainer)) return null;
-
   // The selectable content ends before an inline popover, or at the end of
   // the container.
+  const inlinePopover = popover && container.contains(popover) ? popover : null;
   const limit = container.ownerDocument.createRange();
-  if (popover && container.contains(popover)) {
-    limit.setStartBefore(popover);
+  if (inlinePopover) {
+    limit.setStartBefore(inlinePopover);
   } else {
     limit.selectNodeContents(container);
     limit.collapse(false);
   }
 
+  const range = first.cloneRange();
   const { startContainer: node, startOffset: offset } = limit;
   if (range.comparePoint(node, offset) === 0) {
     const tail = range.cloneRange();
     tail.setStart(node, offset);
+    // A selection that runs past an inline popover covers the popover's own
+    // text, which isn't part of the content, so only the rest is checked.
+    // One that ends inside the popover still counts its text.
+    if (inlinePopover && !inlinePopover.contains(range.endContainer)) {
+      tail.setStartAfter(inlinePopover);
+    }
     if (tail.toString().trim()) return null;
     range.setEnd(node, offset);
   }
 
   return range;
+};
+
+/**
+ * Returns the selected text. `Selection.toString()` follows the rendered
+ * layout, such as line breaks between blocks, so it is preferred. The range
+ * is used instead when the selection has other ranges or covers the
+ * popover, since the popover is anchored to the range alone.
+ */
+const getSelectedText = (
+  selection: Selection,
+  range: Range,
+  popover: Node | null,
+): string => {
+  const first = selection.getRangeAt(0);
+  const coversPopover = popover !== null && first.intersectsNode(popover);
+  if (selection.rangeCount === 1 && !coversPopover) {
+    return selection.toString();
+  }
+  return range.toString();
 };
 
 const HighlightPopoverContext =
@@ -292,8 +325,14 @@ export function HighlightPopover({
   const setShowPopover = useCallback(
     (value: SetStateAction<boolean>) => {
       const show = typeof value === "function" ? value(showRef.current) : value;
+      // Without a selection there is nothing to anchor the popover to.
+      if (show && !rangeRef.current) return;
       dismissedRangeRef.current = show ? null : rangeRef.current;
-      if (!show) reportedSelectionRef.current = "";
+      if (!show) {
+        // The next selection starts over, so it fires onSelectionStart.
+        selectingRef.current = false;
+        reportedSelectionRef.current = "";
+      }
       applyShow(show);
     },
     [applyShow],
@@ -341,10 +380,18 @@ export function HighlightPopover({
     }
 
     const options = optionsRef.current;
-    const text = selection.toString().trim();
-    if (text.length < options.minSelectionLength) {
+    const text = getSelectedText(selection, range, popover).trim();
+    // An empty selection, such as a caret, never shows the popover, even
+    // with a `minSelectionLength` of 0.
+    if (!text || text.length < options.minSelectionLength) {
       resetSelection();
       return;
+    }
+
+    // A dismissed selection stays hidden and doesn't start a new selection.
+    if (dismissedRangeRef.current) {
+      if (isSameRange(dismissedRangeRef.current, range)) return;
+      dismissedRangeRef.current = null;
     }
 
     if (!selectingRef.current) {
@@ -354,10 +401,6 @@ export function HighlightPopover({
 
     if (pointerDownRef.current && !options.showWhileSelecting) return;
 
-    if (dismissedRangeRef.current) {
-      if (isSameRange(dismissedRangeRef.current, range)) return;
-      dismissedRangeRef.current = null;
-    }
     if (
       showRef.current &&
       rangeRef.current &&
@@ -366,9 +409,10 @@ export function HighlightPopover({
       return;
     }
 
-    // `range` is already a copy, which the browser can't mutate.
+    // `range` is already a copy, which the browser can't mutate. Consumers
+    // get their own copy, so changing it doesn't move the popover.
     rangeRef.current = range;
-    setSelectionRange(range);
+    setSelectionRange(range.cloneRange());
     setCurrentSelection(text);
     applyShow(true);
 
@@ -454,9 +498,12 @@ export function HighlightPopover({
     };
     const onPointerDown = (event: PointerEvent) => {
       if (event.button !== 0) return;
+      // Presses elsewhere on the page don't hold back this popover.
+      const target = event.target as Node;
+      const inPopover = popoverRef.current?.contains(target) ?? false;
+      if (!inPopover && !container.contains(target)) return;
       pointerDownRef.current = true;
-      pointerInPopoverRef.current =
-        popoverRef.current?.contains(event.target as Node) ?? false;
+      pointerInPopoverRef.current = inPopover;
     };
     const onPointerUp = () => {
       if (!pointerDownRef.current) return;
@@ -495,7 +542,7 @@ export function HighlightPopover({
     offsetY,
     alignment,
     placement,
-    isPortalled,
+    portal,
     avoidCollisions,
     collisionPadding,
     updatePosition,
@@ -537,7 +584,8 @@ export function HighlightPopover({
       win.removeEventListener("resize", schedule);
       if (frame !== null) win.cancelAnimationFrame(frame);
     };
-  }, [showPopover, updatePosition]);
+    // Changing `portal` remounts the popover element, so observe the new one.
+  }, [showPopover, portal, updatePosition]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -545,7 +593,10 @@ export function HighlightPopover({
     const doc = container.ownerDocument;
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setShowPopover(false);
+      // Leave Escape to an IME composition or to an element that handled it.
+      if (event.key !== "Escape" || event.isComposing) return;
+      if (event.defaultPrevented) return;
+      setShowPopover(false);
     };
 
     doc.addEventListener("keydown", onKeyDown);

@@ -139,7 +139,7 @@ Returns the state of the nearest `HighlightPopover`. Throws an error outside a `
     setShowPopover: {
       type: "(show: boolean | ((prev: boolean) => boolean)) => void",
       description:
-        "Shows or hides the popover. Hiding it keeps it hidden until the selection changes.",
+        "Shows or hides the popover. Showing it does nothing without a selection. Hiding it keeps it hidden until the selection changes.",
     },
     currentSelection: {
       type: "string",

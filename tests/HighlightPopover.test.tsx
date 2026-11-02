@@ -758,6 +758,219 @@ describe("HighlightPopover", () => {
 
         expect(screen.queryByTestId("popover")).toBeNull();
       });
+
+      test("keeps an inline popover with text open when the selection runs past it", async () => {
+        const onSelectionEnd = mock();
+
+        render(
+          <>
+            <HighlightPopover
+              renderPopover={() => <button data-testid="copy">Copy</button>}
+              onSelectionEnd={onSelectionEnd}
+            >
+              <p data-testid="text">Paragraph text</p>
+            </HighlightPopover>
+            <p data-testid="next">Next paragraph</p>
+          </>,
+        );
+
+        const text = screen.getByTestId("text").firstChild!;
+        await setSelection(text, 0, text, 9);
+        await setSelection(text, 0, screen.getByTestId("next"), 0);
+        expect(onSelectionEnd).toHaveBeenLastCalledWith("Paragraph text");
+
+        // Check the same selection again while the popover is on screen.
+        await act(async () => dispatchSelectionChange());
+        await flush();
+
+        expect(screen.getByTestId("copy")).toBeDefined();
+        expect(onSelectionEnd).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    test("doesn't show the popover for a caret with minSelectionLength={0}", async () => {
+      const onSelectionEnd = mock();
+
+      render(
+        <HighlightPopover
+          renderPopover={() => <div data-testid="popover" />}
+          minSelectionLength={0}
+          onSelectionEnd={onSelectionEnd}
+        >
+          <p data-testid="text">Caret text</p>
+        </HighlightPopover>,
+      );
+
+      const text = screen.getByTestId("text").firstChild!;
+      await setSelection(text, 3, text, 3);
+
+      expect(screen.queryByTestId("popover")).toBeNull();
+      expect(onSelectionEnd).not.toHaveBeenCalled();
+    });
+
+    test("changing the range passed to renderPopover doesn't move the popover", async () => {
+      const renderPopover = mock((_: PopoverRenderProps) => <div />);
+      // A collapsed range measures at a different spot, so a changed
+      // internal range would move the popover.
+      Range.prototype.getBoundingClientRect = function (this: Range) {
+        return this.collapsed
+          ? toDOMRect({ top: 500, left: 500, width: 0, height: 0 })
+          : toDOMRect(rangeRect);
+      };
+
+      render(
+        <HighlightPopover renderPopover={renderPopover} portal>
+          <p data-testid="text">Copied text</p>
+        </HighlightPopover>,
+      );
+
+      await selectNode(screen.getByTestId("text"));
+      expect(getPosition(renderPopover)).toEqual({ top: 50, left: 50 });
+
+      renderPopover.mock.calls.at(-1)![0].range!.collapse(true);
+      await act(async () => window.dispatchEvent(new Event("scroll")));
+      await flush();
+
+      expect(getPosition(renderPopover)).toEqual({ top: 50, left: 50 });
+    });
+
+    test("pressing outside the wrapper doesn't hold back the popover", async () => {
+      render(
+        <>
+          <button data-testid="outside">Outside</button>
+          <HighlightPopover renderPopover={() => <div data-testid="popover" />}>
+            <p data-testid="text">Keyboard text</p>
+          </HighlightPopover>
+        </>,
+      );
+
+      fireEvent.pointerDown(screen.getByTestId("outside"), { button: 0 });
+      await selectNode(screen.getByTestId("text"));
+
+      expect(screen.getByTestId("popover")).toBeDefined();
+    });
+
+    test("observes the new popover element when portal changes while open", async () => {
+      const observed: Element[] = [];
+      stubProperty(
+        globalThis,
+        "ResizeObserver",
+        class {
+          observe(element: Element) {
+            observed.push(element);
+          }
+          unobserve() {}
+          disconnect() {}
+        },
+      );
+
+      const { rerender } = render(
+        <HighlightPopover renderPopover={() => <div data-testid="popover" />}>
+          <p data-testid="text">Portal text</p>
+        </HighlightPopover>,
+      );
+
+      await selectNode(screen.getByTestId("text"));
+      rerender(
+        <HighlightPopover
+          renderPopover={() => <div data-testid="popover" />}
+          portal
+        >
+          <p data-testid="text">Portal text</p>
+        </HighlightPopover>,
+      );
+      await flush();
+
+      const popover = screen.getByTestId("popover").parentElement!;
+      expect(popover.parentElement).toBe(document.body);
+      expect(observed).toContain(popover);
+    });
+
+    test("fires onSelectionStart for a new selection after Escape", async () => {
+      const onSelectionStart = mock();
+      const onSelectionEnd = mock();
+
+      render(
+        <HighlightPopover
+          renderPopover={() => <div data-testid="popover" />}
+          onSelectionStart={onSelectionStart}
+          onSelectionEnd={onSelectionEnd}
+        >
+          <p data-testid="first">First text</p>
+          <p data-testid="second">Second text</p>
+        </HighlightPopover>,
+      );
+
+      await selectNode(screen.getByTestId("first"));
+      fireEvent.keyDown(document, { key: "Escape" });
+      await act(async () => dispatchSelectionChange());
+      await flush();
+      expect(onSelectionStart).toHaveBeenCalledTimes(1);
+
+      await selectNode(screen.getByTestId("second"));
+
+      expect(onSelectionStart).toHaveBeenCalledTimes(2);
+      expect(onSelectionEnd).toHaveBeenCalledTimes(2);
+    });
+
+    test("ignores Escape during an IME composition", async () => {
+      render(
+        <HighlightPopover renderPopover={() => <div data-testid="popover" />}>
+          <p data-testid="text">Compose text</p>
+        </HighlightPopover>,
+      );
+
+      await selectNode(screen.getByTestId("text"));
+      fireEvent.keyDown(document, { key: "Escape", isComposing: true });
+      await flush();
+
+      expect(screen.getByTestId("popover")).toBeDefined();
+    });
+
+    test("ignores Escape that an element inside the popover handled", async () => {
+      render(
+        <HighlightPopover
+          renderPopover={() => (
+            <input
+              data-testid="input"
+              onKeyDown={(event) => event.preventDefault()}
+            />
+          )}
+        >
+          <p data-testid="text">Nested text</p>
+        </HighlightPopover>,
+      );
+
+      await selectNode(screen.getByTestId("text"));
+      fireEvent.keyDown(screen.getByTestId("input"), { key: "Escape" });
+      await flush();
+
+      expect(screen.getByTestId("input")).toBeDefined();
+    });
+
+    test("doesn't copy ranges for selections outside the container", async () => {
+      render(
+        <>
+          <p data-testid="outside">Outside</p>
+          <HighlightPopover renderPopover={() => <div />}>
+            <p>Inside</p>
+          </HighlightPopover>
+        </>,
+      );
+
+      const cloneRange = Range.prototype.cloneRange;
+      let clones = 0;
+      Range.prototype.cloneRange = function (this: Range) {
+        clones++;
+        return cloneRange.call(this);
+      };
+      restorers.push(() => {
+        Range.prototype.cloneRange = cloneRange;
+      });
+
+      await selectNode(screen.getByTestId("outside"));
+
+      expect(clones).toBe(0);
     });
   });
 
@@ -789,17 +1002,48 @@ describe("HighlightPopover", () => {
       render(
         <HighlightPopover renderPopover={() => <div />}>
           <Consumer />
+          <p data-testid="text">Toggle text</p>
         </HighlightPopover>,
       );
 
       const toggle = screen.getByTestId("toggle");
-      expect(toggle.textContent).toBe("hidden");
+      await selectNode(screen.getByTestId("text"));
+      expect(toggle.textContent).toBe("shown");
 
       fireEvent.click(toggle);
+      await waitFor(() => {
+        expect(toggle.textContent).toBe("hidden");
+      });
 
+      fireEvent.click(toggle);
       await waitFor(() => {
         expect(toggle.textContent).toBe("shown");
       });
+    });
+
+    test("setShowPopover(true) does nothing without a selection", async () => {
+      const renderPopover = mock(() => <div />);
+
+      function Consumer() {
+        const { showPopover, setShowPopover } = useHighlightPopover();
+        return (
+          <button data-testid="show" onClick={() => setShowPopover(true)}>
+            {showPopover ? "shown" : "hidden"}
+          </button>
+        );
+      }
+
+      render(
+        <HighlightPopover renderPopover={renderPopover}>
+          <Consumer />
+        </HighlightPopover>,
+      );
+
+      fireEvent.click(screen.getByTestId("show"));
+      await flush();
+
+      expect(screen.getByTestId("show").textContent).toBe("hidden");
+      expect(renderPopover).not.toHaveBeenCalled();
     });
 
     test("setShowPopover(false) dismisses the current selection", async () => {
