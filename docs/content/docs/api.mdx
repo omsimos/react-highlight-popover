@@ -23,7 +23,8 @@ description: Props, render props, and the useHighlightPopover hook.
     },
     offset: {
       type: "{ x?: number; y?: number }",
-      description: "`x` moves the popover right, `y` moves it away from the selection.",
+      description:
+        "`x` moves the popover right, `y` moves it away from the selection.",
       default: "{ x: 0, y: 0 }",
     },
     zIndex: {
@@ -53,12 +54,14 @@ description: Props, render props, and the useHighlightPopover hook.
     },
     portal: {
       type: "boolean | HTMLElement",
-      description: "Render the popover in a portal. `true` uses `document.body`.",
+      description:
+        "Render the popover in a portal. `true` uses `document.body`.",
       default: "false",
     },
     minSelectionLength: {
       type: "number",
-      description: "Minimum length of the selected text, not counting whitespace at either end.",
+      description:
+        "Minimum length of the selected text, not counting whitespace at either end.",
       default: "1",
     },
     showWhileSelecting: {
@@ -73,7 +76,8 @@ description: Props, render props, and the useHighlightPopover hook.
     },
     popoverProps: {
       type: "HTMLAttributes<HTMLDivElement>",
-      description: "Props for the popover element, such as `role`, `aria-*`, or `className`.",
+      description:
+        "Props for the popover element, such as `role`, `aria-*`, or `className`.",
     },
     onSelectionStart: {
       type: "() => void",
@@ -81,7 +85,8 @@ description: Props, render props, and the useHighlightPopover hook.
     },
     onSelectionEnd: {
       type: "(selection: string) => void",
-      description: "Fires when a selection is complete, with the selected text.",
+      description:
+        "Fires when a selection is complete, with the selected text.",
     },
     onPopoverShow: {
       type: "() => void",
@@ -106,7 +111,8 @@ description: Props, render props, and the useHighlightPopover hook.
     },
     position: {
       type: "{ top: number; left: number }",
-      description: "Position of the popover's top-left corner, relative to the wrapper, or to the viewport when portalled.",
+      description:
+        "Position of the popover's top-left corner, relative to the wrapper, or to the viewport when portalled.",
     },
     placement: {
       type: '"top" | "bottom"',
@@ -114,7 +120,8 @@ description: Props, render props, and the useHighlightPopover hook.
     },
     range: {
       type: "Range | null",
-      description: "A copy of the selected range, for example to call `getClientRects()`.",
+      description:
+        "A copy of the selected range, for example to call `getClientRects()`.",
     },
   }}
 />
@@ -131,7 +138,8 @@ Returns the state of the nearest `HighlightPopover`. Throws an error outside a `
     },
     setShowPopover: {
       type: "(show: boolean | ((prev: boolean) => boolean)) => void",
-      description: "Shows or hides the popover. Hiding it keeps it hidden until the selection changes.",
+      description:
+        "Shows or hides the popover. Hiding it keeps it hidden until the selection changes.",
     },
     currentSelection: {
       type: "string",

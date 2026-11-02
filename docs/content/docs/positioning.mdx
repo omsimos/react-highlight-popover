@@ -10,7 +10,11 @@ description: Placement, alignment, offsets, collision handling, and portals.
 The popover appears below the selection by default. Use `placement="top"` to place it above. Use `alignment` to line it up with the left edge, center, or right edge of the selection.
 
 ```tsx
-<HighlightPopover placement="top" alignment="left" renderPopover={renderPopover}>
+<HighlightPopover
+  placement="top"
+  alignment="left"
+  renderPopover={renderPopover}
+>
   {children}
 </HighlightPopover>
 ```
@@ -26,7 +30,8 @@ The popover appears below the selection by default. Use `placement="top"` to pla
 ```
 
 <Callout title="Prefer offset over margins">
-  Margins on your popover content stay on the same side when the popover flips. Use `offset` so the gap is always between the selection and the popover.
+  Margins on your popover content stay on the same side when the popover flips.
+  Use `offset` so the gap is always between the selection and the popover.
 </Callout>
 
 ## Collision handling

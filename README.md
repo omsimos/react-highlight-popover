@@ -35,7 +35,7 @@ Requires React 18 or 19. The build starts with a `"use client"` directive, so yo
 Wrap the content people can select, and return your popover from `renderPopover`:
 
 ```jsx
-import { HighlightPopover } from '@omsimos/react-highlight-popover';
+import { HighlightPopover } from "@omsimos/react-highlight-popover";
 
 function App() {
   const renderPopover = ({ selection }) => (
@@ -47,7 +47,8 @@ function App() {
   return (
     <HighlightPopover renderPopover={renderPopover} offset={{ y: 8 }}>
       <p>
-        This is a sample text. Try selecting some words to see the popover in action.
+        This is a sample text. Try selecting some words to see the popover in
+        action.
       </p>
     </HighlightPopover>
   );
@@ -93,7 +94,7 @@ The popover doesn't set a `role`, because the right one depends on what you rend
 ```jsx
 <HighlightPopover
   renderPopover={renderPopover}
-  popoverProps={{ role: 'dialog', 'aria-label': 'Text actions' }}
+  popoverProps={{ role: "dialog", "aria-label": "Text actions" }}
 >
   {children}
 </HighlightPopover>
@@ -105,51 +106,51 @@ Use `role: 'tooltip'` only for content that isn't interactive.
 
 ### `HighlightPopover` props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `children` | `React.ReactNode` | (required) | Content that people can select to show the popover |
-| `renderPopover` | `(props: PopoverRenderProps) => React.ReactNode` | (required) | Renders the popover content |
-| `className` | `string` | `undefined` | Class name for the wrapper element |
-| `offset` | `{ x?: number, y?: number }` | `{ x: 0, y: 0 }` | `x` moves the popover right, `y` moves it away from the selection |
-| `zIndex` | `number` | `40` | The z-index of the popover |
-| `alignment` | `'left'` \| `'center'` \| `'right'` | `'center'` | Horizontal alignment relative to the selected text |
-| `placement` | `'top'` \| `'bottom'` | `'bottom'` | Side of the selected text to place the popover on |
-| `avoidCollisions` | `boolean` | `true` | Flip and shift the popover to keep it inside the viewport |
-| `collisionPadding` | `number` | `8` | Minimum distance in pixels from the viewport edges |
-| `portal` | `boolean` \| `HTMLElement` | `false` | Render the popover in a portal. `true` uses `document.body` |
-| `minSelectionLength` | `number` | `1` | Minimum length of the selected text |
-| `showWhileSelecting` | `boolean` | `false` | Show the popover while the pointer is still dragging |
-| `closeOnEscape` | `boolean` | `true` | Hide the popover when the user presses Escape |
-| `popoverProps` | `React.HTMLAttributes<HTMLDivElement>` | `undefined` | Props for the popover element, such as `role`, `aria-*`, or `className` |
-| `onSelectionStart` | `() => void` | `undefined` | Fires when a selection begins inside the wrapper |
-| `onSelectionEnd` | `(selection: string) => void` | `undefined` | Fires when a selection is complete, with the selected text |
-| `onPopoverShow` | `() => void` | `undefined` | Fires when the popover appears |
-| `onPopoverHide` | `() => void` | `undefined` | Fires when the popover hides |
+| Prop                 | Type                                             | Default          | Description                                                             |
+| -------------------- | ------------------------------------------------ | ---------------- | ----------------------------------------------------------------------- |
+| `children`           | `React.ReactNode`                                | (required)       | Content that people can select to show the popover                      |
+| `renderPopover`      | `(props: PopoverRenderProps) => React.ReactNode` | (required)       | Renders the popover content                                             |
+| `className`          | `string`                                         | `undefined`      | Class name for the wrapper element                                      |
+| `offset`             | `{ x?: number, y?: number }`                     | `{ x: 0, y: 0 }` | `x` moves the popover right, `y` moves it away from the selection       |
+| `zIndex`             | `number`                                         | `40`             | The z-index of the popover                                              |
+| `alignment`          | `'left'` \| `'center'` \| `'right'`              | `'center'`       | Horizontal alignment relative to the selected text                      |
+| `placement`          | `'top'` \| `'bottom'`                            | `'bottom'`       | Side of the selected text to place the popover on                       |
+| `avoidCollisions`    | `boolean`                                        | `true`           | Flip and shift the popover to keep it inside the viewport               |
+| `collisionPadding`   | `number`                                         | `8`              | Minimum distance in pixels from the viewport edges                      |
+| `portal`             | `boolean` \| `HTMLElement`                       | `false`          | Render the popover in a portal. `true` uses `document.body`             |
+| `minSelectionLength` | `number`                                         | `1`              | Minimum length of the selected text                                     |
+| `showWhileSelecting` | `boolean`                                        | `false`          | Show the popover while the pointer is still dragging                    |
+| `closeOnEscape`      | `boolean`                                        | `true`           | Hide the popover when the user presses Escape                           |
+| `popoverProps`       | `React.HTMLAttributes<HTMLDivElement>`           | `undefined`      | Props for the popover element, such as `role`, `aria-*`, or `className` |
+| `onSelectionStart`   | `() => void`                                     | `undefined`      | Fires when a selection begins inside the wrapper                        |
+| `onSelectionEnd`     | `(selection: string) => void`                    | `undefined`      | Fires when a selection is complete, with the selected text              |
+| `onPopoverShow`      | `() => void`                                     | `undefined`      | Fires when the popover appears                                          |
+| `onPopoverHide`      | `() => void`                                     | `undefined`      | Fires when the popover hides                                            |
 
 Callbacks can be inline functions. The component always calls the latest version, and a new function on each render doesn't fire extra callbacks.
 
 ### `renderPopover` props
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `selection` | `string` | The selected text |
-| `position` | `{ top: number, left: number }` | Position of the popover's top-left corner |
-| `placement` | `'top'` \| `'bottom'` | Placement after flipping |
-| `range` | `Range \| null` | A copy of the selected range, for example to call `range.getClientRects()` |
+| Prop        | Type                            | Description                                                                |
+| ----------- | ------------------------------- | -------------------------------------------------------------------------- |
+| `selection` | `string`                        | The selected text                                                          |
+| `position`  | `{ top: number, left: number }` | Position of the popover's top-left corner                                  |
+| `placement` | `'top'` \| `'bottom'`           | Placement after flipping                                                   |
+| `range`     | `Range \| null`                 | A copy of the selected range, for example to call `range.getClientRects()` |
 
 ### `useHighlightPopover`
 
 `useHighlightPopover` returns the state of the nearest `HighlightPopover`:
 
-| Value | Type | Description |
-|-------|------|-------------|
-| `showPopover` | `boolean` | Whether the popover is visible |
-| `setShowPopover` | `(show: boolean \| ((prev: boolean) => boolean)) => void` | Shows or hides the popover. Hiding it keeps it hidden until the selection changes |
-| `popoverPosition` | `{ top: number, left: number }` | Position of the popover's top-left corner |
-| `placement` | `'top'` \| `'bottom'` | Placement after flipping |
-| `currentSelection` | `string` | The selected text |
-| `setCurrentSelection` | `(selection: string) => void` | Replaces the selected text |
-| `selectionRange` | `Range \| null` | A copy of the selected range |
+| Value                 | Type                                                      | Description                                                                       |
+| --------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `showPopover`         | `boolean`                                                 | Whether the popover is visible                                                    |
+| `setShowPopover`      | `(show: boolean \| ((prev: boolean) => boolean)) => void` | Shows or hides the popover. Hiding it keeps it hidden until the selection changes |
+| `popoverPosition`     | `{ top: number, left: number }`                           | Position of the popover's top-left corner                                         |
+| `placement`           | `'top'` \| `'bottom'`                                     | Placement after flipping                                                          |
+| `currentSelection`    | `string`                                                  | The selected text                                                                 |
+| `setCurrentSelection` | `(selection: string) => void`                             | Replaces the selected text                                                        |
+| `selectionRange`      | `Range \| null`                                           | A copy of the selected range                                                      |
 
 ### Types
 
@@ -163,7 +164,7 @@ import type {
   PopoverPosition,
   PopoverAlignment,
   PopoverPlacement,
-} from '@omsimos/react-highlight-popover';
+} from "@omsimos/react-highlight-popover";
 ```
 
 ## Advanced example
@@ -171,7 +172,10 @@ import type {
 This example adds a close button, places the popover above the selection, and logs each callback:
 
 ```jsx
-import { HighlightPopover, useHighlightPopover } from '@omsimos/react-highlight-popover';
+import {
+  HighlightPopover,
+  useHighlightPopover,
+} from "@omsimos/react-highlight-popover";
 
 function CustomPopover() {
   const { currentSelection, setShowPopover } = useHighlightPopover();
@@ -179,7 +183,9 @@ function CustomPopover() {
   return (
     <div className="bg-white border rounded-md p-2 shadow-lg">
       <p>You selected: {currentSelection}</p>
-      <button className="font-semibold" onClick={() => setShowPopover(false)}>Close</button>
+      <button className="font-semibold" onClick={() => setShowPopover(false)}>
+        Close
+      </button>
     </div>
   );
 }
@@ -191,11 +197,11 @@ function App() {
       offset={{ y: 10 }}
       placement="top"
       minSelectionLength={5}
-      popoverProps={{ role: 'dialog', 'aria-label': 'Selection actions' }}
-      onSelectionStart={() => console.log('Selection started')}
-      onSelectionEnd={(selection) => console.log('Selected:', selection)}
-      onPopoverShow={() => console.log('Popover shown')}
-      onPopoverHide={() => console.log('Popover hidden')}
+      popoverProps={{ role: "dialog", "aria-label": "Selection actions" }}
+      onSelectionStart={() => console.log("Selection started")}
+      onSelectionEnd={(selection) => console.log("Selected:", selection)}
+      onPopoverShow={() => console.log("Popover shown")}
+      onPopoverHide={() => console.log("Popover hidden")}
     >
       <p>
         This is a more advanced example. Try selecting at least five characters
