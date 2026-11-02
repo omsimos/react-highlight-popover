@@ -9,7 +9,7 @@ When the user selects with a mouse or pen, the popover appears after they releas
 
 <ReleaseDemo />
 
-Keyboard selections show the popover immediately. `minSelectionLength` sets the minimum number of characters, not counting whitespace at either end.
+Keyboard selections show the popover immediately. `minSelectionLength` sets the minimum number of characters, not counting whitespace at either end. An empty selection never shows the popover, even when `minSelectionLength` is 0.
 
 ## Interacting with the popover
 
@@ -23,7 +23,7 @@ Pressing Escape also hides it, until the selection changes. Set `closeOnEscape={
 
 ## Controlling the popover
 
-`setShowPopover` from `useHighlightPopover` shows or hides the popover. Hiding it works like Escape, so the popover stays hidden until the selection changes.
+`setShowPopover` from `useHighlightPopover` shows or hides the popover. Hiding it works like Escape, so the popover stays hidden until the selection changes. Showing it needs a selection to anchor to, so `setShowPopover(true)` does nothing when no text is selected.
 
 ```tsx
 function Popover() {

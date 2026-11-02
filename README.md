@@ -142,15 +142,15 @@ Callbacks can be inline functions. The component always calls the latest version
 
 `useHighlightPopover` returns the state of the nearest `HighlightPopover`:
 
-| Value                 | Type                                                      | Description                                                                       |
-| --------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `showPopover`         | `boolean`                                                 | Whether the popover is visible                                                    |
-| `setShowPopover`      | `(show: boolean \| ((prev: boolean) => boolean)) => void` | Shows or hides the popover. Hiding it keeps it hidden until the selection changes |
-| `popoverPosition`     | `{ top: number, left: number }`                           | Position of the popover's top-left corner                                         |
-| `placement`           | `'top'` \| `'bottom'`                                     | Placement after flipping                                                          |
-| `currentSelection`    | `string`                                                  | The selected text                                                                 |
-| `setCurrentSelection` | `(selection: string) => void`                             | Replaces the selected text                                                        |
-| `selectionRange`      | `Range \| null`                                           | A copy of the selected range                                                      |
+| Value                 | Type                                                      | Description                                                                                                                    |
+| --------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `showPopover`         | `boolean`                                                 | Whether the popover is visible                                                                                                 |
+| `setShowPopover`      | `(show: boolean \| ((prev: boolean) => boolean)) => void` | Shows or hides the popover. Showing it does nothing without a selection. Hiding it keeps it hidden until the selection changes |
+| `popoverPosition`     | `{ top: number, left: number }`                           | Position of the popover's top-left corner                                                                                      |
+| `placement`           | `'top'` \| `'bottom'`                                     | Placement after flipping                                                                                                       |
+| `currentSelection`    | `string`                                                  | The selected text                                                                                                              |
+| `setCurrentSelection` | `(selection: string) => void`                             | Replaces the selected text                                                                                                     |
+| `selectionRange`      | `Range \| null`                                           | A copy of the selected range                                                                                                   |
 
 ### Types
 
