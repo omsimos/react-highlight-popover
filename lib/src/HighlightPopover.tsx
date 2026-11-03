@@ -93,7 +93,11 @@ export interface HighlightPopoverProps {
    * default the popover waits until the pointer is released.
    */
   showWhileSelecting?: boolean;
-  /** Hide the popover when the Escape key is pressed. */
+  /**
+   * Hide the popover when the Escape key is pressed. Escape does nothing
+   * during an IME composition, or after an element calls `preventDefault()`
+   * on it.
+   */
   closeOnEscape?: boolean;
   /** Props spread onto the popover element, e.g. `role`, `aria-*` or `className`. */
   popoverProps?: HTMLAttributes<HTMLDivElement>;

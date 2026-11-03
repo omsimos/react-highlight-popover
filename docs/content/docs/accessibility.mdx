@@ -25,7 +25,8 @@ The popover doesn't set a `role`, because the right one depends on what you rend
 ## Keyboard
 
 - Keyboard selections, such as <kbd>Shift</kbd> with the arrow keys, show the popover.
-- <kbd>Escape</kbd> hides the popover.
+- <kbd>Escape</kbd> hides the popover, unless an element inside the popover
+  handles the key first and calls `event.preventDefault()`.
 
 The popover doesn't move focus. If keyboard users need its controls, add a way to reach them, such as a keyboard shortcut that focuses the first button.
 
