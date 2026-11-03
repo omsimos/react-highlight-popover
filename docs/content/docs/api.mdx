@@ -61,7 +61,7 @@ description: Props, render props, and the useHighlightPopover hook.
     minSelectionLength: {
       type: "number",
       description:
-        "Minimum length of the selected text, not counting whitespace at either end.",
+        "Minimum length of the selected text, not counting whitespace at either end. An empty selection never shows the popover, even when this is 0.",
       default: "1",
     },
     showWhileSelecting: {
@@ -71,7 +71,8 @@ description: Props, render props, and the useHighlightPopover hook.
     },
     closeOnEscape: {
       type: "boolean",
-      description: "Hide the popover when Escape is pressed.",
+      description:
+        "Hide the popover when Escape is pressed. Escape does nothing during an IME composition, or after an element calls `preventDefault()` on it.",
       default: "true",
     },
     popoverProps: {

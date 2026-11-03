@@ -19,7 +19,7 @@ Clicking inside the popover keeps it open, so its buttons work even when the cli
 
 The popover hides when the selection becomes empty or moves outside the wrapper.
 
-Pressing Escape also hides it, until the selection changes. Set `closeOnEscape={false}` to turn this off.
+Pressing Escape also hides it, until the selection changes. Escape doesn't hide it while an input method editor (IME) is composing text, or when an element inside the popover already handled the key with `event.preventDefault()`, such as a dropdown that closes itself. Set `closeOnEscape={false}` to turn this off.
 
 ## Controlling the popover
 

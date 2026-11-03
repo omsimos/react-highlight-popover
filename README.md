@@ -85,7 +85,7 @@ When the user selects with a mouse or pen, the popover appears after they releas
 
 Clicking inside the popover keeps it open, so its buttons work even if the click clears the selection. Selecting text inside the popover doesn't move it.
 
-Pressing Escape hides the popover until the selection changes. Set `closeOnEscape={false}` to turn this off.
+Pressing Escape hides the popover until the selection changes. Escape doesn't hide the popover while an input method editor (IME) is composing text, or when an element inside the popover already handled the key with `event.preventDefault()`, such as a dropdown that closes itself. Set `closeOnEscape={false}` to turn this off.
 
 ## Accessibility
 
@@ -106,26 +106,26 @@ Use `role: 'tooltip'` only for content that isn't interactive.
 
 ### `HighlightPopover` props
 
-| Prop                 | Type                                             | Default          | Description                                                             |
-| -------------------- | ------------------------------------------------ | ---------------- | ----------------------------------------------------------------------- |
-| `children`           | `React.ReactNode`                                | (required)       | Content that people can select to show the popover                      |
-| `renderPopover`      | `(props: PopoverRenderProps) => React.ReactNode` | (required)       | Renders the popover content                                             |
-| `className`          | `string`                                         | `undefined`      | Class name for the wrapper element                                      |
-| `offset`             | `{ x?: number, y?: number }`                     | `{ x: 0, y: 0 }` | `x` moves the popover right, `y` moves it away from the selection       |
-| `zIndex`             | `number`                                         | `40`             | The z-index of the popover                                              |
-| `alignment`          | `'left'` \| `'center'` \| `'right'`              | `'center'`       | Horizontal alignment relative to the selected text                      |
-| `placement`          | `'top'` \| `'bottom'`                            | `'bottom'`       | Side of the selected text to place the popover on                       |
-| `avoidCollisions`    | `boolean`                                        | `true`           | Flip and shift the popover to keep it inside the viewport               |
-| `collisionPadding`   | `number`                                         | `8`              | Minimum distance in pixels from the viewport edges                      |
-| `portal`             | `boolean` \| `HTMLElement`                       | `false`          | Render the popover in a portal. `true` uses `document.body`             |
-| `minSelectionLength` | `number`                                         | `1`              | Minimum length of the selected text                                     |
-| `showWhileSelecting` | `boolean`                                        | `false`          | Show the popover while the pointer is still dragging                    |
-| `closeOnEscape`      | `boolean`                                        | `true`           | Hide the popover when the user presses Escape                           |
-| `popoverProps`       | `React.HTMLAttributes<HTMLDivElement>`           | `undefined`      | Props for the popover element, such as `role`, `aria-*`, or `className` |
-| `onSelectionStart`   | `() => void`                                     | `undefined`      | Fires when a selection begins inside the wrapper                        |
-| `onSelectionEnd`     | `(selection: string) => void`                    | `undefined`      | Fires when a selection is complete, with the selected text              |
-| `onPopoverShow`      | `() => void`                                     | `undefined`      | Fires when the popover appears                                          |
-| `onPopoverHide`      | `() => void`                                     | `undefined`      | Fires when the popover hides                                            |
+| Prop                 | Type                                             | Default          | Description                                                                                                                                 |
+| -------------------- | ------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `children`           | `React.ReactNode`                                | (required)       | Content that people can select to show the popover                                                                                          |
+| `renderPopover`      | `(props: PopoverRenderProps) => React.ReactNode` | (required)       | Renders the popover content                                                                                                                 |
+| `className`          | `string`                                         | `undefined`      | Class name for the wrapper element                                                                                                          |
+| `offset`             | `{ x?: number, y?: number }`                     | `{ x: 0, y: 0 }` | `x` moves the popover right, `y` moves it away from the selection                                                                           |
+| `zIndex`             | `number`                                         | `40`             | The z-index of the popover                                                                                                                  |
+| `alignment`          | `'left'` \| `'center'` \| `'right'`              | `'center'`       | Horizontal alignment relative to the selected text                                                                                          |
+| `placement`          | `'top'` \| `'bottom'`                            | `'bottom'`       | Side of the selected text to place the popover on                                                                                           |
+| `avoidCollisions`    | `boolean`                                        | `true`           | Flip and shift the popover to keep it inside the viewport                                                                                   |
+| `collisionPadding`   | `number`                                         | `8`              | Minimum distance in pixels from the viewport edges                                                                                          |
+| `portal`             | `boolean` \| `HTMLElement`                       | `false`          | Render the popover in a portal. `true` uses `document.body`                                                                                 |
+| `minSelectionLength` | `number`                                         | `1`              | Minimum length of the selected text, not counting whitespace at either end. An empty selection never shows the popover, even when this is 0 |
+| `showWhileSelecting` | `boolean`                                        | `false`          | Show the popover while the pointer is still dragging                                                                                        |
+| `closeOnEscape`      | `boolean`                                        | `true`           | Hide the popover when the user presses Escape, unless an IME is composing text or an element already called `preventDefault()`              |
+| `popoverProps`       | `React.HTMLAttributes<HTMLDivElement>`           | `undefined`      | Props for the popover element, such as `role`, `aria-*`, or `className`                                                                     |
+| `onSelectionStart`   | `() => void`                                     | `undefined`      | Fires when a selection begins inside the wrapper                                                                                            |
+| `onSelectionEnd`     | `(selection: string) => void`                    | `undefined`      | Fires when a selection is complete, with the selected text                                                                                  |
+| `onPopoverShow`      | `() => void`                                     | `undefined`      | Fires when the popover appears                                                                                                              |
+| `onPopoverHide`      | `() => void`                                     | `undefined`      | Fires when the popover hides                                                                                                                |
 
 Callbacks can be inline functions. The component always calls the latest version, and a new function on each render doesn't fire extra callbacks.
 
